@@ -9,9 +9,6 @@ namespace Raptor {
 	}
 	void Application::Run()
 	{
-		while (true)
-		{
-
-		}
+		while (true);
 	}
 }

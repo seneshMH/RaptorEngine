@@ -1,5 +1,6 @@
 #pragma once
 #include "core.h"
+#include "Event/Event.h"
 
 namespace Raptor {
 	class RAPTOR_API Application
