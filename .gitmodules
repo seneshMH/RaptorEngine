@@ -1,0 +1,3 @@
+[submodule "Raptor/Raptor/vendor/spdlog"]
+	path = Raptor/Raptor/vendor/spdlog
+	url = https://github.com/gabime/spdlog.git
