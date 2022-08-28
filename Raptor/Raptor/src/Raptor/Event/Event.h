@@ -1,10 +1,7 @@
 #pragma once
 
 #include "Raptor/core.h"
-
-#include <string>
-#include <functional>
-#include <ostream>
+#include "rtpch.h"
 
 namespace Raptor {
 

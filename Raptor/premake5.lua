@@ -18,6 +18,9 @@ project "Raptor"
     targetdir ("bin/"..outputdir.."/%{prj.name}")
     objdir ("bin-int/"..outputdir.."/%{prj.name}")
 
+    pchheader "rtpch.h"
+    pchsource "Raptor/src/rtpch.cpp"
+
     files
     {
         "%{prj.name}/src/**.h",

@@ -1,3 +1,4 @@
+#include "rtpch.h"
 #include "Application.h"
 
 namespace Raptor {
