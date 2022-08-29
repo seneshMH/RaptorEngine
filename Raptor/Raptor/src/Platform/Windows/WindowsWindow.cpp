@@ -6,6 +6,8 @@
 #include "Raptor/Event/KeyEvent.h"
 #include "Raptor/Event/MouseEvent.h"
 
+#include <glad/glad.h>
+
 
 namespace Raptor {
 	static bool s_GLFWInitalized = false;
@@ -49,6 +51,8 @@ namespace Raptor {
 
 		m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
 		glfwMakeContextCurrent(m_Window);
+		int success = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		RT_CORE_ASSERT(success, "Could not initalize Glad {0}");
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVsync(true);
 

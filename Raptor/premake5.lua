@@ -12,9 +12,10 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 IncludeDir = {}
 IncludeDir["GLFW"] = "Raptor/vendor/GLFW/include"
+IncludeDir["Glad"] = "Raptor/vendor/Glad/include"
 
 include "Raptor/vendor/GLFW"
-
+include "Raptor/vendor/GLAD"
 
 project "Raptor"
     location "Raptor"
@@ -37,12 +38,14 @@ project "Raptor"
     {
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
-        "%{IncludeDir.GLFW}"
+        "%{IncludeDir.GLFW}",
+        "%{IncludeDir.Glad}"
     }
 
     links
     {
         "GLFW",
+        "Glad",
         "opengl32.lib"
     }
 
@@ -55,7 +58,8 @@ project "Raptor"
         {
             "RT_PLATFORM_WINDOWS",
             "RT_BUILD_DLL",
-            "RT_ENABLE_ASSERTS"
+            "RT_ENABLE_ASSERTS",
+            "GLFW_INCLUDE_NONE"
         }
 
         postbuildcommands
