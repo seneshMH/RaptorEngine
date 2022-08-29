@@ -13,6 +13,8 @@
 #include<unordered_map>
 #include<unordered_set>
 
+#include "Raptor/Log.h"
+
 
 #ifdef RT_PLATFORM_WINDOWS
 	#include<Windows.h>
