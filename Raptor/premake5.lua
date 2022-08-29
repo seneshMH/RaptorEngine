@@ -10,6 +10,12 @@ workspace "Raptor"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+IncludeDir = {}
+IncludeDir["GLFW"] = "Raptor/vendor/GLFW/include"
+
+include "Raptor/vendor/GLFW"
+
+
 project "Raptor"
     location "Raptor"
     kind "SharedLib"
@@ -30,7 +36,14 @@ project "Raptor"
     includedirs
     {
         "%{prj.name}/src",
-        "%{prj.name}/vendor/spdlog/include"
+        "%{prj.name}/vendor/spdlog/include",
+        "%{IncludeDir.GLFW}"
+    }
+
+    links
+    {
+        "GLFW",
+        "opengl32.lib"
     }
 
     filter "system:windows"
@@ -41,7 +54,8 @@ project "Raptor"
         defines
         {
             "RT_PLATFORM_WINDOWS",
-            "RT_BUILD_DLL"
+            "RT_BUILD_DLL",
+            "RT_ENABLE_ASSERTS"
         }
 
         postbuildcommands
