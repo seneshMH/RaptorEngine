@@ -4,3 +4,6 @@
 [submodule "Raptor/Raptor/vendor/GLFW"]
 	path = Raptor/Raptor/vendor/GLFW
 	url = https://github.com/seneshMH/glfw.git
+[submodule "Raptor/Raptor/vendor/imgui"]
+	path = Raptor/Raptor/vendor/imgui
+	url = https://github.com/seneshMH/imgui.git
