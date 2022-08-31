@@ -33,9 +33,9 @@ namespace Raptor {
 				layer->OnUpdate();
 			}
 
-			auto [x, y] = Input::GetMousePosition();
+			//auto [x, y] = Input::GetMousePosition();
 
-			RT_CORE_TRACE("{0}, {1}",x,y);
+			//RT_CORE_TRACE("{0}, {1}",x,y);
 
 			m_Window->OnUpdate();
 		}
