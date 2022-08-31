@@ -7,3 +7,6 @@
 [submodule "Raptor/Raptor/vendor/imgui"]
 	path = Raptor/Raptor/vendor/imgui
 	url = https://github.com/seneshMH/imgui.git
+[submodule "Raptor/Raptor/vendor/glm"]
+	path = Raptor/Raptor/vendor/glm
+	url = https://github.com/g-truc/glm.git
