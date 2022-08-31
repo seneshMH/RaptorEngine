@@ -10,6 +10,11 @@ public:
 	void OnUpdate() override
 	{
 		//RT_INFO("layer update");
+
+		if (Raptor::Input::IsKeyPressed(RT_KEY_A))
+		{
+			RT_TRACE("Tab key is presed");
+		}
 	}
 
 	void OnEvent(Raptor::Event& event) override
