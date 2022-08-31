@@ -24,6 +24,7 @@ workspace "Raptor"
         location "Raptor"
         kind "SharedLib"
         language "c++"
+        staticruntime "off"
 
         targetdir ("bin/"..outputdir.."/%{prj.name}")
         objdir ("bin-int/"..outputdir.."/%{prj.name}")
@@ -56,14 +57,12 @@ workspace "Raptor"
 
         filter "system:windows"
             cppdialect "c++17"
-            staticruntime "On"
             systemversion "latest"
 
             defines
             {
                 "RT_PLATFORM_WINDOWS",
                 "RT_BUILD_DLL",
-                "RT_ENABLE_ASSERTS",
                 "GLFW_INCLUDE_NONE"
             }
 
@@ -74,23 +73,24 @@ workspace "Raptor"
 
         filter "configurations:Debug"
             defines "RT_DEBUG"
-            buildoptions "/MDd"
+            runtime "Debug"
             symbols "On"
 
         filter "configurations:Release"
             defines "RT_RELEASE"
-            buildoptions "/MD"
+            runtime "Release"
             optimize "On"
 
         filter "configurations:Dist"
             defines "RT_DIST"
-            buildoptions "/MD"
+            runtime "Release"
             optimize "On"
 
     project "Sandbox"
         location "Sandbox"
         kind "ConsoleApp"
         language "c++"
+        staticruntime "off"
 
         targetdir ("bin/"..outputdir.."/%{prj.name}")
         objdir ("bin-int/"..outputdir.."/%{prj.name}")
@@ -114,7 +114,6 @@ workspace "Raptor"
 
         filter "system:windows"
             cppdialect "c++17"
-            staticruntime "On"
             systemversion "latest"
 
             defines
@@ -124,15 +123,15 @@ workspace "Raptor"
 
         filter "configurations:Debug"
             defines "RT_DEBUG"
-            buildoptions "/MDd"
+            runtime "Debug"
             symbols "On"
 
         filter "configurations:Release"
             defines "RT_RELEASE"
-            buildoptions "/MD"
+            runtime "Release"
             optimize "On"
 
         filter "configurations:Dist"
             defines "RT_DIST"
-            buildoptions "/MD"
+            runtime "Release"
             optimize "On"
