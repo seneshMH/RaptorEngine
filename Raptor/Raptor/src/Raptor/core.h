@@ -10,6 +10,11 @@
 	#error only suport windows
 #endif
 
+#ifdef RT_DEBUG
+	#define RT_ENABLE_ASSERTS
+#endif // RT_DEBUG
+
+
 #ifdef RT_ENABLE_ASSERTS
 	#define RT_ASSERT(x, ...) {if(!(x)) {RT_ERROR("Assertion faild : {0}",__VA_ARGS__); __debugbreak(); }}
 	#define RT_CORE_ASSERT(x, ...) {if(!(x)) {RT_CORE_ERROR("Assertion faild : {0}",__VA_ARGS__); __debugbreak(); }}
