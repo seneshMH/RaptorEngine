@@ -1,5 +1,6 @@
 #include "rtpch.h"
 #include "Application.h"
+#include <glad/glad.h>
 
 namespace Raptor {
 
@@ -22,6 +23,7 @@ namespace Raptor {
 	{
 		while (m_Running) 
 		{
+			glClear(GL_COLOR_BUFFER_BIT);
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate();
