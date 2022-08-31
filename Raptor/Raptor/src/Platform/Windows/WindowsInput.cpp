@@ -1,0 +1,44 @@
+#include "rtpch.h"
+#include "WindowsInput.h"
+#include "Raptor/Application.h"
+
+#include <GLFW/glfw3.h>
+
+namespace Raptor {
+
+	Input* Input::s_Instance = new WindowsInput();
+
+	bool WindowsInput::IsKeyPressedImpl(int keycode)
+	{
+		auto window = static_cast<GLFWwindow*>( Application::Get().getWindow().GetNativeWindow());
+		auto state =  glfwGetKey(window, keycode);
+
+		return state == GLFW_PRESS || state == GLFW_RELEASE;
+	}
+
+	bool WindowsInput::IsMouseButtonPressedImpl(int button)
+	{
+		auto window = static_cast<GLFWwindow*>(Application::Get().getWindow().GetNativeWindow());
+		auto state = glfwGetMouseButton(window, button);
+
+		return state == GLFW_PRESS;
+	}
+	std::pair<float, float> WindowsInput::GetMousePositionImpl() 
+	{
+		auto window = static_cast<GLFWwindow*>(Application::Get().getWindow().GetNativeWindow());
+		double xPos, yPos;
+		glfwGetCursorPos(window, &xPos, &yPos);
+
+		return { (float)xPos,(float)yPos };
+	}
+	float WindowsInput::GetMouseXImpl()
+	{
+		auto [x, y] = GetMousePositionImpl();
+		return x;
+	}
+	float WindowsInput::GetMouseYImpl()
+	{
+		auto [x, y] = GetMousePositionImpl();
+		return y;
+	}
+}
