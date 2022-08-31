@@ -9,12 +9,12 @@ public:
 
 	void OnUpdate() override
 	{
-		RT_INFO("layer update");
+		//RT_INFO("layer update");
 	}
 
 	void OnEvent(Raptor::Event& event) override
 	{
-		RT_TRACE("{0}", event);
+		//RT_TRACE("{0}", event);
 	}
 };
 

@@ -35,6 +35,23 @@ namespace Raptor {
 		int m_RepeatCount;
 	};
 
+	class RAPTOR_API KeyTypedEvent : public KeyEvent
+	{
+	public:
+		KeyTypedEvent(int keycode)
+			: KeyEvent(keycode){}
+
+
+		std::string ToString() const override
+		{
+			std::stringstream ss;
+			ss << "KeyTypedEvent: " << m_KeyCode;
+			return ss.str();
+		}
+
+		EVENT_CLASS_TYPE(keyTyped)
+	};
+
 	class RAPTOR_API KeyReleasedEvent : public KeyEvent
 	{
 	public:
