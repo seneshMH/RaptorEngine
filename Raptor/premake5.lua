@@ -15,6 +15,7 @@ workspace "Raptor"
     IncludeDir["GLFW"] = "Raptor/vendor/GLFW/include"
     IncludeDir["Glad"] = "Raptor/vendor/Glad/include"
     IncludeDir["ImGui"] = "Raptor/vendor/imgui"
+    IncludeDir["glm"] = "Raptor/vendor/glm"
 
     include "Raptor/vendor/GLFW"
     include "Raptor/vendor/GLAD"
@@ -35,7 +36,8 @@ workspace "Raptor"
         files
         {
             "%{prj.name}/src/**.h",
-            "%{prj.name}/src/**.cpp"
+            "%{prj.name}/src/**.cpp",
+            "%{prj.name}/vendor/glm/glm/**.hpp"
         }
 
         includedirs
@@ -44,7 +46,8 @@ workspace "Raptor"
             "%{prj.name}/vendor/spdlog/include",
             "%{IncludeDir.GLFW}",
             "%{IncludeDir.Glad}",
-            "%{IncludeDir.ImGui}"
+            "%{IncludeDir.ImGui}",
+            "%{IncludeDir.glm}"
         }
 
         links
@@ -104,7 +107,8 @@ workspace "Raptor"
         includedirs
         {
             "Raptor/vendor/spdlog/include",
-            "Raptor/src"
+            "Raptor/src",
+            "%{IncludeDir.glm}"
         }
 
         links
