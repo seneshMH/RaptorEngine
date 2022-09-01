@@ -29,7 +29,7 @@ namespace Raptor {
 	{
 		while (m_Running) 
 		{
-			glClearColor(0.2, 0.2, 0.2, 1);
+			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			for (Layer* layer : m_LayerStack)
@@ -53,13 +53,13 @@ namespace Raptor {
 	void Application::PushLayer(Layer* layer)
 	{
 		m_LayerStack.PushLayer(layer);
-		layer->OnAttach();
+		//layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* overlay)
 	{
 		m_LayerStack.PushOverlay(overlay);
-		overlay->OnAttach();
+		//overlay->OnAttach();
 	}
 
 	void Application::OnEvent(Event& e)
