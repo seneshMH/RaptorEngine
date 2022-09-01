@@ -6,7 +6,8 @@
 #include "Raptor/Event/KeyEvent.h"
 #include "Raptor/Event/MouseEvent.h"
 
-#include <glad/glad.h>
+#include "Platform/OpenGl/OpenGlContext.h"
+
 
 
 namespace Raptor {
@@ -41,6 +42,7 @@ namespace Raptor {
 
 		RT_CORE_INFO("Creating Window {0} ({1},{2})",props.Title, props.width, props.height);
 
+
 		if (!s_GLFWInitalized) {
 			int success = glfwInit();
 			RT_CORE_ASSERT(success,"Could not initalize GLFW {0}");
@@ -50,9 +52,9 @@ namespace Raptor {
 		}
 
 		m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
-		int success = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		RT_CORE_ASSERT(success, "Could not initalize Glad {0}");
+		m_Context = new OpenGLContext(m_Window);
+		m_Context->Init();
+		
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVsync(true);
 
@@ -163,7 +165,7 @@ namespace Raptor {
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_Context->SwapBuffers();
 	}
 
 
