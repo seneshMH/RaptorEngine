@@ -23,9 +23,10 @@ workspace "Raptor"
 
     project "Raptor"
         location "Raptor"
-        kind "SharedLib"
+        kind "StaticLib"
         language "c++"
-        staticruntime "off"
+        cppdialect "c++17"
+        staticruntime "on"
 
         targetdir ("bin/"..outputdir.."/%{prj.name}")
         objdir ("bin-int/"..outputdir.."/%{prj.name}")
@@ -59,7 +60,6 @@ workspace "Raptor"
         }
 
         filter "system:windows"
-            cppdialect "c++17"
             systemversion "latest"
 
             defines
@@ -69,31 +69,28 @@ workspace "Raptor"
                 "GLFW_INCLUDE_NONE"
             }
 
-            postbuildcommands
-            {
-                ("{COPY} %{cfg.buildtarget.relpath} \"../bin/"..outputdir.."/Sandbox/\"")
-            }
 
         filter "configurations:Debug"
             defines "RT_DEBUG"
             runtime "Debug"
-            symbols "On"
+            symbols "on"
 
         filter "configurations:Release"
             defines "RT_RELEASE"
             runtime "Release"
-            optimize "On"
+            optimize "on"
 
         filter "configurations:Dist"
             defines "RT_DIST"
             runtime "Release"
-            optimize "On"
+            optimize "on"
 
     project "Sandbox"
         location "Sandbox"
         kind "ConsoleApp"
         language "c++"
-        staticruntime "off"
+        cppdialect "c++17"
+        staticruntime "on"
 
         targetdir ("bin/"..outputdir.."/%{prj.name}")
         objdir ("bin-int/"..outputdir.."/%{prj.name}")
@@ -117,7 +114,6 @@ workspace "Raptor"
         }
 
         filter "system:windows"
-            cppdialect "c++17"
             systemversion "latest"
 
             defines
@@ -128,14 +124,14 @@ workspace "Raptor"
         filter "configurations:Debug"
             defines "RT_DEBUG"
             runtime "Debug"
-            symbols "On"
+            symbols "on"
 
         filter "configurations:Release"
             defines "RT_RELEASE"
             runtime "Release"
-            optimize "On"
+            optimize "on"
 
         filter "configurations:Dist"
             defines "RT_DIST"
             runtime "Release"
-            optimize "On"
+            optimize "on"

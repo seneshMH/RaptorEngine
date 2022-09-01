@@ -30,7 +30,6 @@ public:
 	SandBox()
 	{
 		PushLayer(new ExampleLayer());
-		PushOverlay(new Raptor::ImGuiLayer());
 	}
 	~SandBox(){}
 };

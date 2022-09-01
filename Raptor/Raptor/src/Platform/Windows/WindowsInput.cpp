@@ -10,7 +10,7 @@ namespace Raptor {
 
 	bool WindowsInput::IsKeyPressedImpl(int keycode)
 	{
-		auto window = static_cast<GLFWwindow*>( Application::Get().getWindow().GetNativeWindow());
+		auto window = static_cast<GLFWwindow*>( Application::Get().GetWindow().GetNativeWindow());
 		auto state =  glfwGetKey(window, keycode);
 
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
@@ -18,14 +18,14 @@ namespace Raptor {
 
 	bool WindowsInput::IsMouseButtonPressedImpl(int button)
 	{
-		auto window = static_cast<GLFWwindow*>(Application::Get().getWindow().GetNativeWindow());
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetMouseButton(window, button);
 
 		return state == GLFW_PRESS;
 	}
 	std::pair<float, float> WindowsInput::GetMousePositionImpl() 
 	{
-		auto window = static_cast<GLFWwindow*>(Application::Get().getWindow().GetNativeWindow());
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
 
