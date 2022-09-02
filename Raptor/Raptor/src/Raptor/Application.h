@@ -7,6 +7,8 @@
 
 #include "Raptor/ImGui/ImGuiLayer.h"
 
+#include "Raptor/Renderer/Shader.h"
+
 namespace Raptor {
 	class RAPTOR_API Application
 	{
@@ -30,6 +32,9 @@ namespace Raptor {
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
+
+		unsigned int m_VertexArray, m_VertexBuffer, m_IndexBuffer;
+		std::unique_ptr<Shader> m_Shader;
 	private:
 		static Application* s_Instance;
 	};
