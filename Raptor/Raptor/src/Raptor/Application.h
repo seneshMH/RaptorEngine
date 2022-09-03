@@ -8,6 +8,7 @@
 #include "Raptor/ImGui/ImGuiLayer.h"
 #include "Raptor/Renderer/Shader.h"
 #include "Raptor/Renderer/Buffer.h"
+#include "Raptor/Renderer/VertexArray.h"
 
 namespace Raptor {
 	class RAPTOR_API Application
@@ -33,10 +34,11 @@ namespace Raptor {
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 
-		unsigned int m_VertexArray;
-		std::unique_ptr<Shader> m_Shader;
-		std::unique_ptr<VertexBuffer> m_VertexBuffer;
-		std::unique_ptr<IndexBuffer> m_IndexBuffer;
+		std::shared_ptr<Shader> m_Shader;
+		std::shared_ptr<VertexArray> m_VertexArray;
+
+		std::shared_ptr<Shader> m_BlueShader;
+		std::shared_ptr<VertexArray> m_SqureVA;
 	private:
 		static Application* s_Instance;
 	};
