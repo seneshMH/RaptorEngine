@@ -97,7 +97,7 @@ namespace Raptor {
 			CalculateOffsetAndStride();
 		}
 
-		inline const std::vector<BufferElement>& const GetElements() { return m_Elements; }
+		inline const std::vector<BufferElement>&  GetElements() const { return m_Elements; }
 		inline uint32_t GetStride() const { return m_Stride; }
 
 
@@ -133,7 +133,7 @@ namespace Raptor {
 		virtual void UnBind() const = 0;
 
 		virtual void SetLayout(const BufferLayout& layout) = 0;
-		virtual const BufferLayout GetLayout() const = 0;
+		virtual const BufferLayout& GetLayout() const = 0;
 
 		static VertexBuffer* Create(float* vertices, uint32_t size);
 	};

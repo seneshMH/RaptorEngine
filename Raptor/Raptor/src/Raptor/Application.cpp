@@ -11,38 +11,6 @@ namespace Raptor {
 
 	Application* Application::s_Instance = nullptr;
 
-	static GLenum ShaderDataTypeToOpenGLDataType(ShaderDataType type)
-	{
-		switch (type)
-		{
-		case Raptor::ShaderDataType::Float:		return GL_FLOAT;
-			break;
-		case Raptor::ShaderDataType::Float2:	return GL_FLOAT;
-			break;
-		case Raptor::ShaderDataType::Float3:	return GL_FLOAT;
-			break;
-		case Raptor::ShaderDataType::Float4:	return GL_FLOAT;
-			break;
-		case Raptor::ShaderDataType::Mat3:		return GL_FLOAT;
-			break;
-		case Raptor::ShaderDataType::Mat4:		return GL_FLOAT;
-			break;
-		case Raptor::ShaderDataType::Int:		return GL_INT;
-			break;
-		case Raptor::ShaderDataType::Int2:		return GL_INT;
-			break;
-		case Raptor::ShaderDataType::Int3:		return GL_INT;
-			break;
-		case Raptor::ShaderDataType::Int4:		return GL_INT;
-			break;
-		case Raptor::ShaderDataType::Bool:		return GL_BOOL;
-			break;
-		}
-
-		RT_CORE_ASSERT(false, "Unknown DataType");
-		return 0;
-	}
-
 	Application::Application()
 	{
 		RT_CORE_ASSERT(!s_Instance, "Application already exists");
@@ -54,46 +22,58 @@ namespace Raptor {
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 
-		glGenVertexArrays(1, &m_VertexArray);
-		glBindVertexArray(m_VertexArray);
+		m_VertexArray.reset(VertexArray::Create());
 
 		float vertices[3 * 7] = {
 			-0.5f,-0.5f, 0.0f, 0.8f,0.2f,0.2f,1.0f,
 			 0.5f,-0.5f, 0.0f, 0.2f,0.8f,0.2f,1.0f,
 			 0.0f, 0.5f, 0.0f, 0.2f,0.2f,0.8f,1.0f
 		};
-
-		m_VertexBuffer.reset(VertexBuffer::Create(vertices,sizeof(vertices)));
+		std::shared_ptr<VertexBuffer> vertexBuffer;
+		vertexBuffer.reset(VertexBuffer::Create(vertices,sizeof(vertices)));
 		
-		{
-			BufferLayout layout = {
-				{ShaderDataType::Float3,"a_Position"},
-				{ShaderDataType::Float4,"a_Color"}
-			};
-
-			m_VertexBuffer->SetLayout(layout);
-		}
-
-		uint32_t index = 0;
-		const auto& layout = m_VertexBuffer->GetLayout();
-		for (const auto& element : layout)
-		{
-			glEnableVertexAttribArray(index);
-			glVertexAttribPointer(
-				index, 
-				element.GetComponentCount(), 
-				ShaderDataTypeToOpenGLDataType(element.Type), 
-				element.Normalized ? GL_TRUE : GL_FALSE, 
-				layout.GetStride(),
-				(const void*)element.Offset
-			);
-			index ++;
-		}
-
 		
+		BufferLayout layout = {
+			{ShaderDataType::Float3,"a_Position"},
+			{ShaderDataType::Float4,"a_Color"}
+		};
+
+		vertexBuffer->SetLayout(layout);
+		m_VertexArray->AddvertexBuffer(vertexBuffer);
+
 		unsigned int indices[3] = {0,1,2};
 
-		m_IndexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		std::shared_ptr<IndexBuffer> indexBuffer;
+		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		m_VertexArray->SetIndexBuffer(indexBuffer);
+
+		m_SqureVA.reset(VertexArray::Create());
+
+		float squreVertices[3 * 4] = {
+			-0.5f,-0.5f, 0.0f, 
+			 0.5f,-0.5f, 0.0f, 
+			 0.5f, 0.5f, 0.0f,
+			 -0.5f, 0.5f, 0.0f
+		};
+
+		std::shared_ptr<VertexBuffer> squreVB;
+		squreVB.reset(VertexBuffer::Create(squreVertices, sizeof(squreVertices)));
+
+		BufferLayout squreVBLayout = {
+			{ShaderDataType::Float3,"a_Position"},
+		};
+
+		squreVB->SetLayout(squreVBLayout);
+
+		m_SqureVA->AddvertexBuffer(squreVB);
+
+
+		unsigned int squreIndices[6] = { 0,1,2,2,3,0 };
+
+		std::shared_ptr<IndexBuffer> squreIB;
+		squreIB.reset(IndexBuffer::Create(squreIndices, sizeof(squreIndices) / sizeof(uint32_t)));
+
+		m_SqureVA->SetIndexBuffer(squreIB);
 
 		std::string vertexSrc = R"(
 			#version 330 core
@@ -129,6 +109,37 @@ namespace Raptor {
 
 
 		m_Shader.reset(new Shader(vertexSrc,fragmentSrc));
+
+
+		std::string BlueShaderVertexSrc = R"(
+			#version 330 core
+			
+			layout(location=0) in vec3 aPosition;
+
+			out vec3 vPosition;
+			
+			void main()
+			{
+				vPosition = aPosition;
+				gl_Position = vec4(aPosition,1.0);
+			}		
+		)";
+
+		std::string BlueShaderFragmentSrc = R"(
+			#version 330 core
+			
+			layout(location=0) out vec4 color;
+
+			in vec3 vPosition;
+			
+			
+			void main()
+			{
+				color = vec4(0.2,0.3,0.8,1.0);
+			}		
+		)";
+
+		m_BlueShader.reset(new Shader(BlueShaderVertexSrc, BlueShaderFragmentSrc));
 	}
 	Application::~Application()
 	{
@@ -139,10 +150,13 @@ namespace Raptor {
 		{
 			glClearColor(0.1f, 0.1f, 0.1f, 1);
 			glClear(GL_COLOR_BUFFER_BIT);
-			m_Shader->Bind();
+			m_BlueShader->Bind();
+			m_SqureVA->Bind();
+			glDrawElements(GL_TRIANGLES, m_SqureVA->GetIndexBuffers()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
-			glBindVertexArray(m_VertexArray);
-			glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
+			m_Shader->Bind();
+			m_VertexArray->Bind();
+			glDrawElements(GL_TRIANGLES,m_VertexArray->GetIndexBuffers()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
 			for (Layer* layer : m_LayerStack)
 			{
