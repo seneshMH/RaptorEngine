@@ -12,6 +12,7 @@ namespace Raptor {
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application()
+		:m_Camera(-1.6f,1.6f,-0.9f,0.9f)
 	{
 		RT_CORE_ASSERT(!s_Instance, "Application already exists");
 		s_Instance = this;
@@ -81,6 +82,8 @@ namespace Raptor {
 			layout(location=0) in vec3 aPosition;
 			layout(location=1) in vec4 aColor;
 
+			uniform mat4 u_ViewProjection;
+
 			out vec3 vPosition;
 			out vec4 vColor;
 			
@@ -88,7 +91,7 @@ namespace Raptor {
 			{
 				vPosition = aPosition;
 				vColor = aColor;
-				gl_Position = vec4(aPosition,1.0);
+				gl_Position = u_ViewProjection * vec4(aPosition,1.0);
 			}		
 		)";
 
@@ -116,12 +119,14 @@ namespace Raptor {
 			
 			layout(location=0) in vec3 aPosition;
 
+			uniform mat4 u_ViewProjection;
+
 			out vec3 vPosition;
 			
 			void main()
 			{
 				vPosition = aPosition;
-				gl_Position = vec4(aPosition,1.0);
+				gl_Position = u_ViewProjection * vec4(aPosition,1.0);
 			}		
 		)";
 
@@ -151,13 +156,12 @@ namespace Raptor {
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
 
-			Renderer::BeginScene();
+			m_Camera.SetRotation(45.0f);
 
-			m_BlueShader->Bind();
-			Renderer::Submit(m_SqureVA);
+			Renderer::BeginScene(m_Camera);
 
-			m_Shader->Bind();
-			Renderer::Submit(m_VertexArray);
+			Renderer::Submit(m_BlueShader,m_SqureVA);
+			Renderer::Submit(m_Shader,m_VertexArray);
 
 			Renderer::EndScene();
 
