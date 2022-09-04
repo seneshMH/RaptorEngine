@@ -9,11 +9,11 @@ namespace Raptor {
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::None:
+		case RendererAPI::API::None:
 			RT_CORE_ASSERT(false, "RendererAPI::None not supported");
 			return nullptr;
 			break;
-		case RendererAPI::OpenGL:
+		case RendererAPI::API::OpenGL:
 			return new OpenGLVertexArray();
 			break;
 		default:

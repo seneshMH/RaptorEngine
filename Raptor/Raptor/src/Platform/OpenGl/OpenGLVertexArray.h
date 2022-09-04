@@ -8,7 +8,7 @@ namespace Raptor {
 	public:
 		OpenGLVertexArray();
 
-		virtual ~OpenGLVertexArray() {}
+		virtual ~OpenGLVertexArray();
 
 		virtual void Bind() const override;
 		virtual void UnBind() const override;
