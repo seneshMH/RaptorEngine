@@ -2,7 +2,7 @@
 #include "Application.h"
 #include "Input.h"
 
-#include <glad/glad.h>
+#include "Raptor/Renderer/Renderer.h"
 
 
 namespace Raptor {
@@ -148,15 +148,18 @@ namespace Raptor {
 	{
 		while (m_Running) 
 		{
-			glClearColor(0.1f, 0.1f, 0.1f, 1);
-			glClear(GL_COLOR_BUFFER_BIT);
+			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+			RenderCommand::Clear();
+
+			Renderer::BeginScene();
+
 			m_BlueShader->Bind();
-			m_SqureVA->Bind();
-			glDrawElements(GL_TRIANGLES, m_SqureVA->GetIndexBuffers()->GetCount(), GL_UNSIGNED_INT, nullptr);
+			Renderer::Submit(m_SqureVA);
 
 			m_Shader->Bind();
-			m_VertexArray->Bind();
-			glDrawElements(GL_TRIANGLES,m_VertexArray->GetIndexBuffers()->GetCount(), GL_UNSIGNED_INT, nullptr);
+			Renderer::Submit(m_VertexArray);
+
+			Renderer::EndScene();
 
 			for (Layer* layer : m_LayerStack)
 			{
