@@ -1,5 +1,7 @@
 #include <Raptor.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 // enable optimus!
 extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 1;
@@ -72,6 +74,7 @@ public:
 			layout(location=1) in vec4 aColor;
 
 			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
 
 			out vec3 vPosition;
 			out vec4 vColor;
@@ -80,7 +83,7 @@ public:
 			{
 				vPosition = aPosition;
 				vColor = aColor;
-				gl_Position = u_ViewProjection * vec4(aPosition,1.0);
+				gl_Position = u_ViewProjection * u_Transform * vec4(aPosition,1.0);
 			}		
 		)";
 
@@ -109,13 +112,14 @@ public:
 			layout(location=0) in vec3 aPosition;
 
 			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
 
 			out vec3 vPosition;
 			
 			void main()
 			{
 				vPosition = aPosition;
-				gl_Position = u_ViewProjection * vec4(aPosition,1.0);
+				gl_Position = u_ViewProjection * u_Transform * vec4(aPosition,1.0);
 			}		
 		)";
 
@@ -138,8 +142,7 @@ public:
 
 	void OnUpdate(Raptor::Timestep ts) override
 	{
-		RT_INFO("FPS : {0} ", 1 / ts);
-
+		
 		if (Raptor::Input::IsKeyPressed( RT_KEY_LEFT))
 			m_CameraPosition.x -= m_CameraSpeed * ts;
 		else if (Raptor::Input::IsKeyPressed(RT_KEY_RIGHT))
@@ -154,6 +157,7 @@ public:
 		if (Raptor::Input::IsKeyPressed(RT_KEY_D))
 			m_CameraRotation -= m_CameraRotationSpeed * ts;
 
+
 		Raptor::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Raptor::RenderCommand::Clear();
 
@@ -162,8 +166,18 @@ public:
 
 		Raptor::Renderer::BeginScene(m_Camera);
 
-		Raptor::Renderer::Submit(m_BlueShader, m_SqureVA);
-		Raptor::Renderer::Submit(m_Shader, m_VertexArray);
+		static glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+
+		for (int y = 0; y < 20; y++) {
+			for (int x = 0; x < 20; x++)
+			{
+				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
+				Raptor::Renderer::Submit(m_BlueShader, m_SqureVA, transform);
+			}
+		}
+
+		//Raptor::Renderer::Submit(m_Shader, m_VertexArray);
 
 		Raptor::Renderer::EndScene();
 	}
@@ -186,6 +200,7 @@ private:
 
 	float m_CameraRotation = 0.0f;
 	float m_CameraRotationSpeed = 30.0f;
+
 };
 
 
