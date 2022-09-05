@@ -5,7 +5,7 @@
 #include "Raptor/Core/Timestep.h"
 
 namespace Raptor {
-	class RAPTOR_API Layer
+	class Layer
 	{
 	public:
 		Layer(const std::string& name = "Layer");

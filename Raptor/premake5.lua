@@ -113,6 +113,7 @@ workspace "Raptor"
         {
             "Raptor/vendor/spdlog/include",
             "Raptor/src",
+            "Raptor/vendor",
             "%{IncludeDir.glm}"
         }
 
