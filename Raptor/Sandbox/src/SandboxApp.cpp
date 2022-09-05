@@ -26,7 +26,7 @@ public:
 			 0.5f,-0.5f, 0.0f, 0.2f,0.8f,0.2f,1.0f,
 			 0.0f, 0.5f, 0.0f, 0.2f,0.2f,0.8f,1.0f
 		};
-		std::shared_ptr<Raptor::VertexBuffer> vertexBuffer;
+		Raptor::Ref<Raptor::VertexBuffer> vertexBuffer;
 		vertexBuffer.reset(Raptor::VertexBuffer::Create(vertices, sizeof(vertices)));
 
 
@@ -40,7 +40,7 @@ public:
 
 		unsigned int indices[3] = { 0,1,2 };
 
-		std::shared_ptr<Raptor::IndexBuffer> indexBuffer;
+		Raptor::Ref<Raptor::IndexBuffer> indexBuffer;
 		indexBuffer.reset(Raptor::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
@@ -53,7 +53,7 @@ public:
 			 -0.5f, 0.5f, 0.0f
 		};
 
-		std::shared_ptr<Raptor::VertexBuffer> squreVB;
+		Raptor::Ref<Raptor::VertexBuffer> squreVB;
 		squreVB.reset(Raptor::VertexBuffer::Create(squreVertices, sizeof(squreVertices)));
 
 		Raptor::BufferLayout squreVBLayout = {
@@ -67,7 +67,7 @@ public:
 
 		unsigned int squreIndices[6] = { 0,1,2,2,3,0 };
 
-		std::shared_ptr<Raptor::IndexBuffer> squreIB;
+		Raptor::Ref<Raptor::IndexBuffer> squreIB;
 		squreIB.reset(Raptor::IndexBuffer::Create(squreIndices, sizeof(squreIndices) / sizeof(uint32_t)));
 
 		m_SqureVA->SetIndexBuffer(squreIB);
@@ -203,11 +203,11 @@ public:
 	}
 
 private:
-	std::shared_ptr<Raptor::Shader> m_Shader;
-	std::shared_ptr<Raptor::VertexArray> m_VertexArray;
+	Raptor::Ref<Raptor::Shader> m_Shader;
+	Raptor::Ref<Raptor::VertexArray> m_VertexArray;
 
-	std::shared_ptr<Raptor::Shader> m_BlueShader;
-	std::shared_ptr<Raptor::VertexArray> m_SqureVA;
+	Raptor::Ref<Raptor::Shader> m_BlueShader;
+	Raptor::Ref<Raptor::VertexArray> m_SqureVA;
 
 	Raptor::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
