@@ -136,21 +136,23 @@ public:
 		m_BlueShader.reset(new Raptor::Shader(BlueShaderVertexSrc, BlueShaderFragmentSrc));
 	}
 
-	void OnUpdate() override
+	void OnUpdate(Raptor::Timestep ts) override
 	{
+		RT_INFO("FPS : {0} ", 1 / ts);
+
 		if (Raptor::Input::IsKeyPressed( RT_KEY_LEFT))
-			m_CameraPosition.x -= m_CameraSpeed;
+			m_CameraPosition.x -= m_CameraSpeed * ts;
 		else if (Raptor::Input::IsKeyPressed(RT_KEY_RIGHT))
-			m_CameraPosition.x += m_CameraSpeed;
+			m_CameraPosition.x += m_CameraSpeed * ts;
 		if (Raptor::Input::IsKeyPressed(RT_KEY_DOWN))
-			m_CameraPosition.y -= m_CameraSpeed;
+			m_CameraPosition.y -= m_CameraSpeed * ts;
 		else if (Raptor::Input::IsKeyPressed(RT_KEY_UP))
-			m_CameraPosition.y += m_CameraSpeed;
+			m_CameraPosition.y += m_CameraSpeed * ts;
 
 		if (Raptor::Input::IsKeyPressed(RT_KEY_A))
-			m_CameraRotation += m_CameraRotationSpeed;
+			m_CameraRotation += m_CameraRotationSpeed * ts;
 		if (Raptor::Input::IsKeyPressed(RT_KEY_D))
-			m_CameraRotation -= m_CameraRotationSpeed;
+			m_CameraRotation -= m_CameraRotationSpeed * ts;
 
 		Raptor::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Raptor::RenderCommand::Clear();
@@ -180,10 +182,10 @@ private:
 
 	Raptor::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
-	float m_CameraSpeed = 0.01f;
+	float m_CameraSpeed = 1.0f;
 
 	float m_CameraRotation = 0.0f;
-	float m_CameraRotationSpeed = 1.0f;
+	float m_CameraRotationSpeed = 30.0f;
 };
 
 

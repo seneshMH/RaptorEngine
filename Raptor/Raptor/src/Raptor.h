@@ -16,6 +16,8 @@
 #include "Raptor/Renderer/VertexArray.h"
 #include "Raptor/Renderer/OrthographicCamera.h"
 
+#include "Raptor/Core/Timestep.h"
+
 //Entry Point
 #include "Raptor/EntryPoint.h"
 
