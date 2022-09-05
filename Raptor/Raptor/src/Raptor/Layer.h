@@ -2,6 +2,8 @@
 #include "Raptor/core.h"
 #include "Event/Event.h"
 
+#include "Raptor/Core/Timestep.h"
+
 namespace Raptor {
 	class RAPTOR_API Layer
 	{
@@ -11,7 +13,7 @@ namespace Raptor {
 
 		virtual void OnAttach() {};
 		virtual void OnDetach() {};
-		virtual void OnUpdate() {};
+		virtual void OnUpdate(Timestep ts) {};
 		virtual void OnImGuiRender() {};
 		virtual void OnEvent(Event& event) {}
 
