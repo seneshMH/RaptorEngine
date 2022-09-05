@@ -6,12 +6,6 @@
 #include "LayerStack.h"
 
 #include "Raptor/ImGui/ImGuiLayer.h"
-#include "Raptor/Renderer/Shader.h"
-#include "Raptor/Renderer/Buffer.h"
-#include "Raptor/Renderer/VertexArray.h"
-
-#include "Raptor/Renderer/OrthographicCamera.h"
-
 
 namespace Raptor {
 	class Application
@@ -37,13 +31,6 @@ namespace Raptor {
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 
-		std::shared_ptr<Shader> m_Shader;
-		std::shared_ptr<VertexArray> m_VertexArray;
-
-		std::shared_ptr<Shader> m_BlueShader;
-		std::shared_ptr<VertexArray> m_SqureVA;
-
-		OrthographicCamera m_Camera;
 	private:
 		static Application* s_Instance;
 	};
