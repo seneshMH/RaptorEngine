@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #ifdef RT_PLATFORM_WINDOWS
 	#if RT_DYANAMIC_LINK
@@ -30,3 +31,11 @@
 
 #define BIT(x) (1 << x)
 #define RT_BIND_EVENT_FN(fn) std::bind(&fn,this,std::placeholders::_1)
+
+namespace Raptor {
+	template<typename T>
+	using Scope = std::unique_ptr<T>;
+
+	template<typename T>
+	using Ref = std::shared_ptr<T>;
+}
