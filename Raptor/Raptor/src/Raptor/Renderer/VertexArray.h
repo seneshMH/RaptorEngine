@@ -1,4 +1,5 @@
 #pragma once
+#include "Raptor/core.h"
 #include <memory>
 #include "Raptor/Renderer/Buffer.h"
 

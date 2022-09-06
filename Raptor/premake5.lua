@@ -16,6 +16,7 @@ workspace "Raptor"
     IncludeDir["Glad"] = "Raptor/vendor/Glad/include"
     IncludeDir["ImGui"] = "Raptor/vendor/imgui"
     IncludeDir["glm"] = "Raptor/vendor/glm"
+    IncludeDir["stb_image"] = "Raptor/vendor/stb_image"
 
     group "Dependencies"
         include "Raptor/vendor/GLFW"
@@ -40,6 +41,8 @@ workspace "Raptor"
         {
             "%{prj.name}/src/**.h",
             "%{prj.name}/src/**.cpp",
+            "%{prj.name}/vendor/stb_image/**.h",
+            "%{prj.name}/vendor/stb_image/**.cpp",
             "%{prj.name}/vendor/glm/glm/**.hpp",
             "%{prj.name}/vendor/glm/glm/**.inl"
         }
@@ -56,7 +59,8 @@ workspace "Raptor"
             "%{IncludeDir.GLFW}",
             "%{IncludeDir.Glad}",
             "%{IncludeDir.ImGui}",
-            "%{IncludeDir.glm}"
+            "%{IncludeDir.glm}",
+            "%{IncludeDir.stb_image}"
         }
 
         links
