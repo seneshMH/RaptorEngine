@@ -22,4 +22,22 @@ namespace Raptor {
 			break;
 		}
 	}
+
+	Shader* Shader::Create(const std::string& filepath)
+	{
+		switch (Renderer::GetAPI())
+		{
+		case RendererAPI::API::None:
+			RT_CORE_ASSERT(false, "RendererAPI::None not supported");
+			return nullptr;
+			break;
+		case RendererAPI::API::OpenGL:
+			return new OpenGLShader(filepath);
+			break;
+		default:
+			RT_CORE_ASSERT(false, "Unkown renderAPI")
+				return nullptr;
+			break;
+		}
+	}
 }

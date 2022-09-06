@@ -145,40 +145,7 @@ public:
 
 		m_BlueShader.reset( Raptor::Shader::Create(BlueShaderVertexSrc, BlueShaderFragmentSrc));
 
-		std::string textureShaderVertexSrc = R"(
-			#version 330 core
-			
-			layout(location=0) in vec3 aPosition;
-			layout(location=1) in vec2 aTexCoords;
-
-			uniform mat4 u_ViewProjection;
-			uniform mat4 u_Transform;
-
-			out vec2 vTexCoords;
-			
-			void main()
-			{
-				vTexCoords = aTexCoords;
-				gl_Position = u_ViewProjection * u_Transform * vec4(aPosition,1.0);
-			}		
-		)";
-
-		std::string textureShaderFragmentSrc = R"(
-			#version 330 core
-			
-			layout(location=0) out vec4 color;
-
-			in vec2 vTexCoords;
-			uniform sampler2D uTexture;
-			
-			void main()
-			{
-				color = texture(uTexture,vTexCoords);
-			}		
-		)";
-
-		
-		m_TextureShader.reset(Raptor::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
+		m_TextureShader.reset(Raptor::Shader::Create("assets/shaders/Texture.glsl"));
 		m_Texture = Raptor::Texture2D::Create("assets/images/checker.png");
 		m_LogoTexture = Raptor::Texture2D::Create("assets/images/logo.png");
 
