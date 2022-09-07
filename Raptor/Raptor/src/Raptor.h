@@ -12,6 +12,7 @@
 
 
 #include "Raptor/Renderer/Renderer.h"
+#include "Raptor/Renderer/Renderer2D.h"
 #include "Raptor/Renderer/RenderCommand.h"
 #include "Raptor/Renderer/Buffer.h"
 #include "Raptor/Renderer/Shader.h"
