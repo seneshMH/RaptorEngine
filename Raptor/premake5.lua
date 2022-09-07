@@ -76,7 +76,6 @@ workspace "Raptor"
 
             defines
             {
-                "RT_PLATFORM_WINDOWS",
                 "RT_BUILD_DLL",
                 "GLFW_INCLUDE_NONE"
             }
@@ -128,11 +127,6 @@ workspace "Raptor"
 
         filter "system:windows"
             systemversion "latest"
-
-            defines
-            {
-                "RT_PLATFORM_WINDOWS"
-            }
 
         filter "configurations:Debug"
             defines "RT_DEBUG"
