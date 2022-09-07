@@ -8,8 +8,6 @@
 
 #include "Platform/OpenGl/OpenGlContext.h"
 
-
-
 namespace Raptor {
 	static bool s_GLFWInitalized = false;
 

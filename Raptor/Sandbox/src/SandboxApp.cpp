@@ -200,6 +200,13 @@ public:
 	void OnEvent(Raptor::Event& e) override
 	{
 		m_CameraController.OnEvevnt(e);
+
+		/*
+		if (e.GetEventType() == Raptor::EventType::WindowResize)
+		{
+			auto& re = (Raptor::WindowResizeEvent&)e;
+		}
+		*/
 	}
 
 private:
