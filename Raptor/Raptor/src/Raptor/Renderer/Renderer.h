@@ -24,6 +24,6 @@ namespace Raptor {
 			glm::mat4 viewProjection;
 		};
 
-		static SceneData* s_SceneData;
+		static Scope<SceneData> s_SceneData;
 	};
 }
