@@ -17,6 +17,8 @@
 #include "Raptor/Renderer/OrthographicCamera.h"
 #include "Raptor/Renderer/Texture.h"
 
+#include "Raptor/OrthographicCameraController.h"
+
 #include "Raptor/Core/Timestep.h"
 
 //Entry Point
