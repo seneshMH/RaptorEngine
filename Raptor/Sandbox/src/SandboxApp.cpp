@@ -109,7 +109,7 @@ public:
 		)";
 
 
-		m_Shader.reset( Raptor::Shader::Create(vertexSrc, fragmentSrc));
+		m_Shader = Raptor::Shader::Create("VertexPosColor",vertexSrc, fragmentSrc);
 
 
 		std::string BlueShaderVertexSrc = R"(
@@ -143,46 +143,15 @@ public:
 			}		
 		)";
 
-		m_BlueShader.reset( Raptor::Shader::Create(BlueShaderVertexSrc, BlueShaderFragmentSrc));
+		m_BlueShader = Raptor::Shader::Create("FlatColor",BlueShaderVertexSrc, BlueShaderFragmentSrc);
 
-		std::string textureShaderVertexSrc = R"(
-			#version 330 core
-			
-			layout(location=0) in vec3 aPosition;
-			layout(location=1) in vec2 aTexCoords;
+		auto textureShader =  m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 
-			uniform mat4 u_ViewProjection;
-			uniform mat4 u_Transform;
-
-			out vec2 vTexCoords;
-			
-			void main()
-			{
-				vTexCoords = aTexCoords;
-				gl_Position = u_ViewProjection * u_Transform * vec4(aPosition,1.0);
-			}		
-		)";
-
-		std::string textureShaderFragmentSrc = R"(
-			#version 330 core
-			
-			layout(location=0) out vec4 color;
-
-			in vec2 vTexCoords;
-			uniform sampler2D uTexture;
-			
-			void main()
-			{
-				color = texture(uTexture,vTexCoords);
-			}		
-		)";
-
-		
-		m_TextureShader.reset(Raptor::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
 		m_Texture = Raptor::Texture2D::Create("assets/images/checker.png");
+		m_LogoTexture = Raptor::Texture2D::Create("assets/images/logo.png");
 
-		std::dynamic_pointer_cast<Raptor::OpenGLShader>(m_TextureShader)->Bind();
-		std::dynamic_pointer_cast<Raptor::OpenGLShader>(m_TextureShader)->UploadUniformInt("uTexture", 0);
+		std::dynamic_pointer_cast<Raptor::OpenGLShader>(textureShader)->Bind();
+		std::dynamic_pointer_cast<Raptor::OpenGLShader>(textureShader)->UploadUniformInt("uTexture", 0);
 	}
 
 	void OnUpdate(Raptor::Timestep ts) override
@@ -225,10 +194,14 @@ public:
 			}
 		}
 
+		auto textureShader = m_ShaderLibrary.Get("Texture");
+
 		m_Texture->Bind();
-		Raptor::Renderer::Submit(m_TextureShader, m_SqureVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		Raptor::Renderer::Submit(textureShader, m_SqureVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
-
+		m_LogoTexture->Bind();
+		Raptor::Renderer::Submit(textureShader, m_SqureVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		
 		//Raptor::Renderer::Submit(m_Shader, m_VertexArray);
 
 		Raptor::Renderer::EndScene();
@@ -247,15 +220,14 @@ public:
 	}
 
 private:
+	Raptor::ShaderLibrary m_ShaderLibrary;
 	Raptor::Ref<Raptor::Shader> m_Shader;
 	Raptor::Ref<Raptor::VertexArray> m_VertexArray;
 
 	Raptor::Ref<Raptor::Shader> m_BlueShader;
 	Raptor::Ref<Raptor::VertexArray> m_SqureVA;
 
-	Raptor::Ref<Raptor::Shader> m_TextureShader;
-
-	Raptor::Ref<Raptor::Texture2D> m_Texture;
+	Raptor::Ref<Raptor::Texture2D> m_Texture,m_LogoTexture;
 
 	Raptor::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
