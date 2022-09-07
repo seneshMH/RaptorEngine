@@ -5,7 +5,7 @@
 #include "Platform/OpenGl/OpenGLVertexArray.h"
 
 namespace Raptor {
-	VertexArray* VertexArray::Create()
+	Ref<VertexArray> VertexArray::Create()
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -14,7 +14,7 @@ namespace Raptor {
 			return nullptr;
 			break;
 		case RendererAPI::API::OpenGL:
-			return new OpenGLVertexArray();
+			return CreateRef<OpenGLVertexArray>();
 			break;
 		default:
 			RT_CORE_ASSERT(false, "Unkown renderAPI")

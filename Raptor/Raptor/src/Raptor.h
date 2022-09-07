@@ -12,6 +12,7 @@
 
 
 #include "Raptor/Renderer/Renderer.h"
+#include "Raptor/Renderer/Renderer2D.h"
 #include "Raptor/Renderer/RenderCommand.h"
 #include "Raptor/Renderer/Buffer.h"
 #include "Raptor/Renderer/Shader.h"
@@ -19,9 +20,4 @@
 #include "Raptor/Renderer/OrthographicCamera.h"
 #include "Raptor/Renderer/Texture.h"
 #include "Raptor/Renderer/OrthographicCameraController.h"
-
-
-
-//Entry Point
-#include "Raptor/Core/EntryPoint.h"
 
