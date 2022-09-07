@@ -20,8 +20,3 @@
 #include "Raptor/Renderer/Texture.h"
 #include "Raptor/Renderer/OrthographicCameraController.h"
 
-
-
-//Entry Point
-#include "Raptor/Core/EntryPoint.h"
-
