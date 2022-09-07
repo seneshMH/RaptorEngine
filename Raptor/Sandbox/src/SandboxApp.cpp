@@ -17,7 +17,7 @@ class ExampleLayer : public Raptor::Layer
 {
 public:
 	ExampleLayer()
-		:Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f),m_CameraPosition(0.0f)
+		:Layer("Example"), m_CameraController(1280.0f/720.0f,true)
 	{
 		m_VertexArray.reset(Raptor::VertexArray::Create());
 
@@ -156,36 +156,20 @@ public:
 
 	void OnUpdate(Raptor::Timestep ts) override
 	{
+		m_CameraController.OnUpdate(ts);
 		
-		if (Raptor::Input::IsKeyPressed( RT_KEY_LEFT))
-			m_CameraPosition.x -= m_CameraSpeed * ts;
-		else if (Raptor::Input::IsKeyPressed(RT_KEY_RIGHT))
-			m_CameraPosition.x += m_CameraSpeed * ts;
-		if (Raptor::Input::IsKeyPressed(RT_KEY_DOWN))
-			m_CameraPosition.y -= m_CameraSpeed * ts;
-		else if (Raptor::Input::IsKeyPressed(RT_KEY_UP))
-			m_CameraPosition.y += m_CameraSpeed * ts;
-
-		if (Raptor::Input::IsKeyPressed(RT_KEY_A))
-			m_CameraRotation += m_CameraRotationSpeed * ts;
-		if (Raptor::Input::IsKeyPressed(RT_KEY_D))
-			m_CameraRotation -= m_CameraRotationSpeed * ts;
-
-
 		Raptor::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Raptor::RenderCommand::Clear();
 
-		m_Camera.SetPosition(m_CameraPosition);
-		m_Camera.SetRotation(m_CameraRotation);
-
-		Raptor::Renderer::BeginScene(m_Camera);
+		Raptor::Renderer::BeginScene(m_CameraController.GetCamera());
 
 		static glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
 		std::dynamic_pointer_cast<Raptor::OpenGLShader>(m_BlueShader)->Bind();
 		std::dynamic_pointer_cast<Raptor::OpenGLShader>(m_BlueShader)->UploadUniformFloat3("u_Color", m_SquareColor);
 
-		for (int y = 0; y < 20; y++) {
+		for (int y = 0; y < 20; y++) 
+		{
 			for (int x = 0; x < 20; x++)
 			{
 				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
@@ -214,9 +198,16 @@ public:
 		ImGui::End();
 	}
 
-	void OnEvent(Raptor::Event& event) override
+	void OnEvent(Raptor::Event& e) override
 	{
-		
+		m_CameraController.OnEvevnt(e);
+
+		/*
+		if (e.GetEventType() == Raptor::EventType::WindowResize)
+		{
+			auto& re = (Raptor::WindowResizeEvent&)e;
+		}
+		*/
 	}
 
 private:
@@ -229,13 +220,8 @@ private:
 
 	Raptor::Ref<Raptor::Texture2D> m_Texture,m_LogoTexture;
 
-	Raptor::OrthographicCamera m_Camera;
-	glm::vec3 m_CameraPosition;
-	float m_CameraSpeed = 1.0f;
-
-	float m_CameraRotation = 0.0f;
-	float m_CameraRotationSpeed = 30.0f;
-
+	Raptor::OrthographicCameraController m_CameraController;
+	
 	glm::vec3 m_SquareColor = { 0.2f,0.1f,0.8f };
 
 };

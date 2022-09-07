@@ -1,5 +1,5 @@
 #pragma once
-#include "Raptor/Input.h"
+#include "Raptor/Core/Input.h"
 
 
 namespace Raptor {

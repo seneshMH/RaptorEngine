@@ -9,6 +9,7 @@ namespace Raptor {
 	{
 	public:
 		static void Init();
+		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		static void BeginScene(OrthographicCamera& camera);
 		static void EndScene();
@@ -23,6 +24,6 @@ namespace Raptor {
 			glm::mat4 viewProjection;
 		};
 
-		static SceneData* s_SceneData;
+		static Scope<SceneData> s_SceneData;
 	};
 }

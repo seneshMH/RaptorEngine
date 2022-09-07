@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Raptor/core.h"
+#include "Raptor/Core/core.h"
 
 namespace Raptor {
-	class RAPTOR_API Input {
+	class Input {
 	public:
 		inline static bool IsKeyPressed(int keycode) { return s_Instance->IsKeyPressedImpl(keycode); }
 
@@ -20,6 +20,6 @@ namespace Raptor {
 		virtual float GetMouseXImpl() = 0;
 		virtual float GetMouseYImpl() = 0;
 	private:
-		static Input* s_Instance;
+		static Scope<Input> s_Instance;
 	};
 }

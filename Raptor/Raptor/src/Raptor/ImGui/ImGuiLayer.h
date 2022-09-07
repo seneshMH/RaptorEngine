@@ -1,6 +1,6 @@
 #pragma once
-#include "Raptor/core.h"
-#include "Raptor/Layer.h"
+#include "Raptor/Core/core.h"
+#include "Raptor/Core/Layer.h"
 
 #include "Raptor/Event/ApplicationEvent.h"
 #include "Raptor/Event/KeyEvent.h"

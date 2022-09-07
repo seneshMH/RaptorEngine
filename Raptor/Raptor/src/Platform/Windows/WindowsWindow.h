@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Raptor/Window.h"
+#include "Raptor/Core/Window.h"
 #include "Raptor/Renderer/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>
@@ -28,7 +28,7 @@ namespace Raptor {
 
 	private:
 		GLFWwindow* m_Window;
-		GraphicsContext* m_Context;
+		Scope<GraphicsContext> m_Context;
 
 		struct WindowData
 		{

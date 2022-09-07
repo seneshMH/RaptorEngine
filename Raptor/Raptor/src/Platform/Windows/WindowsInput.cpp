@@ -1,12 +1,12 @@
 #include "rtpch.h"
 #include "WindowsInput.h"
-#include "Raptor/Application.h"
+#include "Raptor/Core/Application.h"
 
 #include <GLFW/glfw3.h>
 
 namespace Raptor {
 
-	Input* Input::s_Instance = new WindowsInput();
+	Scope<Input> Input::s_Instance = CreateScope<WindowsInput>();
 
 	bool WindowsInput::IsKeyPressedImpl(int keycode)
 	{

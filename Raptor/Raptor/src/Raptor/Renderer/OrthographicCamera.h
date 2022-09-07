@@ -6,6 +6,7 @@ namespace Raptor {
 	{
 	public:
 		OrthographicCamera(float left, float right, float bottom, float top);
+		void SetProjection(float left, float right, float bottom, float top);
 
 		void SetPosition(const glm::vec3& position) { m_Position = position; RecalculateViewMatrix(); }
 		void SetRotation(const float rotation) { m_Rotation = rotation;  RecalculateViewMatrix(); }

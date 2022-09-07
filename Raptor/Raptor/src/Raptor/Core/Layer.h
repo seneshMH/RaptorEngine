@@ -1,6 +1,6 @@
 #pragma once
-#include "Raptor/core.h"
-#include "Event/Event.h"
+#include "Raptor/Core/core.h"
+#include "Raptor/Event/Event.h"
 
 #include "Raptor/Core/Timestep.h"
 
