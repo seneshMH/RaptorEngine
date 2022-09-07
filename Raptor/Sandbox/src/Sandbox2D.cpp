@@ -13,6 +13,7 @@ Sandbox2D::Sandbox2D()
 
 void Sandbox2D::OnAttach()
 {
+	m_CheckerBordTexture = Raptor::Texture2D::Create("assets/images/checker.png");
 }
 
 void Sandbox2D::OnDetach()
@@ -30,6 +31,7 @@ void Sandbox2D::OnUpdate(Raptor::Timestep ts)
 
 	Raptor::Renderer2D::DrawQuad({-1.0f,0.0f},{0.8f,0.8f},m_SquareColor);
 	Raptor::Renderer2D::DrawQuad({0.5f,-0.5f},{0.5f,0.75f},m_SquareColor);
+	Raptor::Renderer2D::DrawQuad({0.0f,0.0f,-0.14f},{10.0f,10.0f},m_CheckerBordTexture);
 
 	Raptor::Renderer2D::EndScene();
 }
