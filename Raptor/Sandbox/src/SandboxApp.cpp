@@ -201,7 +201,7 @@ public:
 
 		m_LogoTexture->Bind();
 		Raptor::Renderer::Submit(textureShader, m_SqureVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
-
+		
 		//Raptor::Renderer::Submit(m_Shader, m_VertexArray);
 
 		Raptor::Renderer::EndScene();
@@ -226,7 +226,6 @@ private:
 
 	Raptor::Ref<Raptor::Shader> m_BlueShader;
 	Raptor::Ref<Raptor::VertexArray> m_SqureVA;
-
 
 	Raptor::Ref<Raptor::Texture2D> m_Texture,m_LogoTexture;
 
