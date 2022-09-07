@@ -1,13 +1,15 @@
 #pragma once
 
-#include "Raptor/Application.h"
-#include "Raptor/Log.h"
-#include "Raptor/Layer.h"
+#include "Raptor/Core/Application.h"
+#include "Raptor/Core/Log.h"
+#include "Raptor/Core/Layer.h"
 #include "Raptor/ImGui/ImGuiLayer.h"
 
-#include "Raptor/Input.h"
-#include "Raptor/MouseButtonCodes.h"
-#include "Raptor/KeyCodes.h"
+#include "Raptor/Core/Input.h"
+#include "Raptor/Core/MouseButtonCodes.h"
+#include "Raptor/Core/KeyCodes.h"
+#include "Raptor/Core/Timestep.h"
+
 
 #include "Raptor/Renderer/Renderer.h"
 #include "Raptor/Renderer/RenderCommand.h"
@@ -16,11 +18,10 @@
 #include "Raptor/Renderer/VertexArray.h"
 #include "Raptor/Renderer/OrthographicCamera.h"
 #include "Raptor/Renderer/Texture.h"
+#include "Raptor/Renderer/OrthographicCameraController.h"
 
-#include "Raptor/OrthographicCameraController.h"
 
-#include "Raptor/Core/Timestep.h"
 
 //Entry Point
-#include "Raptor/EntryPoint.h"
+#include "Raptor/Core/EntryPoint.h"
 

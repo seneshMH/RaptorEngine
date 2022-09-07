@@ -1,8 +1,8 @@
 #pragma once
 #include "core.h"
 #include "Window.h"
-#include "Event/Event.h"
-#include "Event/ApplicationEvent.h"
+#include "Raptor/Event/Event.h"
+#include "Raptor/Event/ApplicationEvent.h"
 #include "LayerStack.h"
 
 #include "Raptor/ImGui/ImGuiLayer.h"

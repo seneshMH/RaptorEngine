@@ -1,7 +1,7 @@
 #include "rtpch.h"
 #include "OrthographicCameraController.h"
-#include "Raptor/Input.h"
-#include "Raptor/KeyCodes.h"
+#include "Raptor/Core/Input.h"
+#include "Raptor/Core/KeyCodes.h"
 
 namespace Raptor {
 	OrthographicCameraController::OrthographicCameraController(float aspectRatio, bool rotation)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Raptor/Window.h"
+#include "Raptor/Core/Window.h"
 #include "Raptor/Renderer/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>
