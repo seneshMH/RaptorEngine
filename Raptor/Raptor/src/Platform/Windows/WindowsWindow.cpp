@@ -9,7 +9,8 @@
 #include "Platform/OpenGl/OpenGlContext.h"
 
 namespace Raptor {
-	static bool s_GLFWInitalized = false;
+
+	static uint8_t s_GLFWWindowCount = 0;
 
 	static void GLFWErrorCallback(int error,const char* discription) 
 	{
@@ -41,15 +42,15 @@ namespace Raptor {
 		RT_CORE_INFO("Creating Window {0} ({1},{2})",props.Title, props.width, props.height);
 
 
-		if (!s_GLFWInitalized) {
+		if (s_GLFWWindowCount == 0) {
 			int success = glfwInit();
 			RT_CORE_ASSERT(success,"Could not initalize GLFW {0}");
 
 			glfwSetErrorCallback(GLFWErrorCallback);
-			s_GLFWInitalized = true;
 		}
 
 		m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
+		++s_GLFWWindowCount;
 		m_Context = CreateScope<OpenGLContext>(m_Window);
 		m_Context->Init();
 		
@@ -155,8 +156,16 @@ namespace Raptor {
 	}
 
 	void WindowsWindow::Shutdown()
-	{
+	{ 
 		glfwDestroyWindow(m_Window);
+
+		s_GLFWWindowCount -= 1;
+
+		if (s_GLFWWindowCount == 0)
+		{
+			RT_CORE_INFO("Terminateing window");
+			glfwTerminate();
+		}
 	}
 
 
