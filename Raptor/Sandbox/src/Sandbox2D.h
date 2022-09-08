@@ -23,4 +23,12 @@ private:
 	Raptor::Ref<Raptor::Texture2D> m_CheckerBordTexture;
 
 	glm::vec4 m_SquareColor = { 0.2f,0.1f,0.8f,1.0f };
+
+	struct ProfileResult
+	{
+		const char* Name;
+		float Time;
+	};
+
+	std::vector<ProfileResult> m_ProfileResult;
 };
