@@ -1,4 +1,5 @@
 #pragma once
+#include "Raptor/Core/core.h"
 
 #ifdef RT_PLATFORM_WINDOWS
 

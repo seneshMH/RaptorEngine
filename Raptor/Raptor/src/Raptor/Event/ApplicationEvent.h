@@ -5,7 +5,7 @@
 
 namespace Raptor {
 
-	class RAPTOR_API WindowResizeEvent : public Event
+	class WindowResizeEvent : public Event
 	{
 	public:
 		WindowResizeEvent(unsigned int width, unsigned int height)
@@ -27,7 +27,7 @@ namespace Raptor {
 		unsigned int m_Width, m_Height;
 	};
 
-	class RAPTOR_API WindowCloseEvent : public Event
+	class WindowCloseEvent : public Event
 	{
 	public:
 		WindowCloseEvent() = default;
@@ -36,7 +36,7 @@ namespace Raptor {
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-	class RAPTOR_API AppTickEvent : public Event
+	class AppTickEvent : public Event
 	{
 	public:
 		AppTickEvent() = default;
@@ -45,7 +45,7 @@ namespace Raptor {
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-	class RAPTOR_API AppUpdateEvent : public Event
+	class AppUpdateEvent : public Event
 	{
 	public:
 		AppUpdateEvent() = default;
@@ -54,7 +54,7 @@ namespace Raptor {
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-	class RAPTOR_API AppRenderEvent : public Event
+	class AppRenderEvent : public Event
 	{
 	public:
 		AppRenderEvent() = default;

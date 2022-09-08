@@ -7,7 +7,7 @@
 #include "Raptor/Event/MouseEvent.h"
 
 namespace Raptor {
-	class RAPTOR_API ImGuiLayer : public Layer
+	class ImGuiLayer : public Layer
 	{
 	public:
 		ImGuiLayer();

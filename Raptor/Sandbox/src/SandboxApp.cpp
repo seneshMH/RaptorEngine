@@ -29,10 +29,8 @@ public:
 			 0.5f,-0.5f, 0.0f, 0.2f,0.8f,0.2f,1.0f,
 			 0.0f, 0.5f, 0.0f, 0.2f,0.2f,0.8f,1.0f
 		};
-		Raptor::Ref<Raptor::VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(Raptor::VertexBuffer::Create(vertices, sizeof(vertices)));
-
-
+		Raptor::Ref<Raptor::VertexBuffer> vertexBuffer = Raptor::VertexBuffer::Create(vertices, sizeof(vertices));
+		
 		Raptor::BufferLayout layout = {
 			{Raptor::ShaderDataType::Float3,"a_Position"},
 			{Raptor::ShaderDataType::Float4,"a_Color"}
@@ -43,8 +41,7 @@ public:
 
 		unsigned int indices[3] = { 0,1,2 };
 
-		Raptor::Ref<Raptor::IndexBuffer> indexBuffer;
-		indexBuffer.reset(Raptor::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		Raptor::Ref<Raptor::IndexBuffer> indexBuffer = Raptor::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
 		m_SqureVA = Raptor::VertexArray::Create();
@@ -56,9 +53,8 @@ public:
 			-0.5f, 0.5f, 0.0f,  0.0f,1.0f
 		};
 
-		Raptor::Ref<Raptor::VertexBuffer> squreVB;
-		squreVB.reset(Raptor::VertexBuffer::Create(squreVertices, sizeof(squreVertices)));
-
+		Raptor::Ref<Raptor::VertexBuffer> squreVB = Raptor::VertexBuffer::Create(squreVertices, sizeof(squreVertices));
+		
 		Raptor::BufferLayout squreVBLayout = {
 			{Raptor::ShaderDataType::Float3,"a_Position"},
 			{Raptor::ShaderDataType::Float2,"a_TexCoords"},
@@ -71,9 +67,8 @@ public:
 
 		unsigned int squreIndices[6] = { 0,1,2,2,3,0 };
 
-		Raptor::Ref<Raptor::IndexBuffer> squreIB;
-		squreIB.reset(Raptor::IndexBuffer::Create(squreIndices, sizeof(squreIndices) / sizeof(uint32_t)));
-
+		Raptor::Ref<Raptor::IndexBuffer> squreIB = Raptor::IndexBuffer::Create(squreIndices, sizeof(squreIndices) / sizeof(uint32_t));
+		
 		m_SqureVA->SetIndexBuffer(squreIB);
 
 		std::string vertexSrc = R"(
@@ -153,8 +148,8 @@ public:
 		m_Texture = Raptor::Texture2D::Create("assets/images/checker.png");
 		m_LogoTexture = Raptor::Texture2D::Create("assets/images/logo.png");
 
-		std::dynamic_pointer_cast<Raptor::OpenGLShader>(textureShader)->Bind();
-		std::dynamic_pointer_cast<Raptor::OpenGLShader>(textureShader)->UploadUniformInt("uTexture", 0);
+		textureShader->Bind();
+		textureShader->SetInt("uTexture", 0);
 	}
 
 	void OnUpdate(Raptor::Timestep ts) override
@@ -168,8 +163,8 @@ public:
 
 		static glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
-		std::dynamic_pointer_cast<Raptor::OpenGLShader>(m_BlueShader)->Bind();
-		std::dynamic_pointer_cast<Raptor::OpenGLShader>(m_BlueShader)->UploadUniformFloat3("u_Color", m_SquareColor);
+		m_BlueShader->Bind();
+		m_BlueShader->SetFloat3("u_Color", m_SquareColor);
 
 		for (int y = 0; y < 20; y++) 
 		{

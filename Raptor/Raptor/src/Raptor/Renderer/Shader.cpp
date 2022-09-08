@@ -14,7 +14,7 @@ namespace Raptor {
 			return nullptr;
 			break;
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLShader>( name,vertexSrc, fragmentSrc);
+			return CreateRef<OpenGLShader>( name,vertexSrc, fragmentSrc);
 			break;
 		default:
 			RT_CORE_ASSERT(false, "Unkown renderAPI")
@@ -32,7 +32,7 @@ namespace Raptor {
 			return nullptr;
 			break;
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLShader>(filepath);
+			return CreateRef<OpenGLShader>(filepath);
 			break;
 		default:
 			RT_CORE_ASSERT(false, "Unkown renderAPI")

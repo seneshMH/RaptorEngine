@@ -30,9 +30,8 @@ namespace Raptor {
 			-0.5f, 0.5f, 0.0f, 0.0f,1.0f
 		};
 
-		Ref<VertexBuffer> squreVB;
-		squreVB.reset(VertexBuffer::Create(squreVertices, sizeof(squreVertices)));
-
+		Ref<VertexBuffer> squreVB = VertexBuffer::Create(squreVertices, sizeof(squreVertices));
+		
 		BufferLayout squreVBLayout = {
 			{ShaderDataType::Float3,"a_Position"},
 			{ShaderDataType::Float2,"a_TexCoord"},
@@ -45,9 +44,8 @@ namespace Raptor {
 
 		unsigned int squreIndices[6] = { 0,1,2,2,3,0 };
 
-		Ref<IndexBuffer> squreIB;
-		squreIB.reset(IndexBuffer::Create(squreIndices, sizeof(squreIndices) / sizeof(uint32_t)));
-
+		Ref<IndexBuffer> squreIB = IndexBuffer::Create(squreIndices, sizeof(squreIndices) / sizeof(uint32_t));
+		
 		s_Data->QuadVertexArray->SetIndexBuffer(squreIB);
 
 		s_Data->WhiteTexture = Texture2D::Create(1, 1);

@@ -17,9 +17,9 @@ namespace Raptor {
 		RT_CORE_ERROR("GLFW ERROR ({0}) : {1}", error, discription);
 	}
 
-	Window* Window::Create(const WindowProps& props)
+	Scope<Window> Window::Create(const WindowProps& props)
 	{
-		return new WindowsWindow(props);
+		return CreateScope<WindowsWindow>(props);
 	}
 
 
@@ -51,7 +51,7 @@ namespace Raptor {
 
 		m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
 		++s_GLFWWindowCount;
-		m_Context = CreateScope<OpenGLContext>(m_Window);
+		m_Context =GraphicsContext::Create(m_Window);
 		m_Context->Init();
 		
 		glfwSetWindowUserPointer(m_Window, &m_Data);
