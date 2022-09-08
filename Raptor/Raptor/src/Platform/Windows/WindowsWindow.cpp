@@ -18,12 +18,6 @@ namespace Raptor {
 		RT_CORE_ERROR("GLFW ERROR ({0}) : {1}", error, discription);
 	}
 
-	Scope<Window> Window::Create(const WindowProps& props)
-	{
-		return CreateScope<WindowsWindow>(props);
-	}
-
-
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
 		RT_PROFILE_FUNCTION();

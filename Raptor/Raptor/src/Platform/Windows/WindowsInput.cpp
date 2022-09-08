@@ -6,7 +6,6 @@
 
 namespace Raptor {
 
-	Scope<Input> Input::s_Instance = CreateScope<WindowsInput>();
 
 	bool WindowsInput::IsKeyPressedImpl(int keycode)
 	{
