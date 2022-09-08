@@ -10,6 +10,8 @@ namespace Raptor {
 
 	void Renderer::Init()
 	{
+		RT_PROFILE_FUNCTION();
+		
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}

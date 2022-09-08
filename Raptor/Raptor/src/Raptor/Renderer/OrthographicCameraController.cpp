@@ -10,6 +10,8 @@ namespace Raptor {
 	}
 	void OrthographicCameraController::OnUpdate(Timestep ts)
 	{
+		RT_PROFILE_FUNCTION();
+
 		if (Input::IsKeyPressed(RT_KEY_A))
 		{
 			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
@@ -55,12 +57,16 @@ namespace Raptor {
 	}
 	void OrthographicCameraController::OnEvevnt(Event& e)
 	{
+		RT_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<MouseScrolledEvent>(RT_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
 		dispatcher.Dispatch<WindowResizeEvent>(RT_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
 	}
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
+		RT_PROFILE_FUNCTION();
+
 		m_ZoomLevel += e.GetYOffset() * 0.25f;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
@@ -68,6 +74,8 @@ namespace Raptor {
 	}
 	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
 	{
+		RT_PROFILE_FUNCTION();
+
 		m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		return false;

@@ -12,6 +12,8 @@ namespace Raptor {
 	}
 	void OpenGLContext::Init()
 	{
+		RT_PROFILE_FUNCTION();
+
 		glfwMakeContextCurrent(m_WindowHandle);
 		int success = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		RT_CORE_ASSERT(success, "Could not initalize Glad");
@@ -32,6 +34,8 @@ namespace Raptor {
 	}
 	void OpenGLContext::SwapBuffers()
 	{
+		RT_PROFILE_FUNCTION();
+
 		glfwSwapBuffers(m_WindowHandle);
 	}
 }

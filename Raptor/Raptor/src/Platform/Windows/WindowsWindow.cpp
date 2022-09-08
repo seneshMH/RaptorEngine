@@ -25,16 +25,22 @@ namespace Raptor {
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
+		RT_PROFILE_FUNCTION();
+
 		Init(props);
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
+		RT_PROFILE_FUNCTION();
+
 		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
+		RT_PROFILE_FUNCTION();
+
 		m_Data.Title = props.Title;
 		m_Data.Width = props.width;
 		m_Data.Height = props.height;
@@ -42,15 +48,22 @@ namespace Raptor {
 		RT_CORE_INFO("Creating Window {0} ({1},{2})",props.Title, props.width, props.height);
 
 
-		if (s_GLFWWindowCount == 0) {
+		if (s_GLFWWindowCount == 0) 
+		{
+			RT_PROFILE_SCOPE("glfw Init");
+
 			int success = glfwInit();
 			RT_CORE_ASSERT(success,"Could not initalize GLFW {0}");
 
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
-		m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
-		++s_GLFWWindowCount;
+		{
+			RT_PROFILE_SCOPE("glfw create window");
+			m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
+			++s_GLFWWindowCount;
+		}
+
 		m_Context =GraphicsContext::Create(m_Window);
 		m_Context->Init();
 		
@@ -157,6 +170,8 @@ namespace Raptor {
 
 	void WindowsWindow::Shutdown()
 	{ 
+		RT_PROFILE_FUNCTION();
+
 		glfwDestroyWindow(m_Window);
 
 		s_GLFWWindowCount -= 1;
@@ -171,6 +186,8 @@ namespace Raptor {
 
 	void WindowsWindow::OnUpdate()
 	{
+		RT_PROFILE_FUNCTION();
+
 		glfwPollEvents();
 		m_Context->SwapBuffers();
 	}
@@ -178,6 +195,8 @@ namespace Raptor {
 
 	void WindowsWindow::SetVsync(bool enabled)
 	{
+		RT_PROFILE_FUNCTION();
+
 		if(enabled)
 		{
 			glfwSwapInterval(1);

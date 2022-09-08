@@ -20,6 +20,8 @@ namespace Raptor {
 
 	void Renderer2D::Init()
 	{
+		RT_PROFILE_FUNCTION();
+
 		s_Data = new Renderer2DStroge();
 		s_Data->QuadVertexArray = VertexArray::Create();
 
@@ -59,17 +61,22 @@ namespace Raptor {
 
 	void Renderer2D::Shutdown()
 	{
+		RT_PROFILE_FUNCTION();
+
 		delete s_Data;
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
+		RT_PROFILE_FUNCTION();
+
 		s_Data->TextureShader->Bind();
 		s_Data->TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 	}
 
 	void Renderer2D::EndScene()
 	{
+		RT_PROFILE_FUNCTION();
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
@@ -79,6 +86,8 @@ namespace Raptor {
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
+		RT_PROFILE_FUNCTION();
+
 		s_Data->TextureShader->SetFloat4("u_Color", color);
 		s_Data->WhiteTexture->Bind();
 
@@ -96,6 +105,8 @@ namespace Raptor {
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D> texture)
 	{
+		RT_PROFILE_FUNCTION();
+
 		s_Data->TextureShader->SetFloat4("u_Color", glm::vec4(1.0f));
 
 		texture->Bind();
