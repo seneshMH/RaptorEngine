@@ -7,7 +7,7 @@
 #include "Raptor/Event/MouseEvent.h"
 
 namespace Raptor {
-	class RAPTOR_API ImGuiLayer : public Layer
+	class ImGuiLayer : public Layer
 	{
 	public:
 		ImGuiLayer();
@@ -15,8 +15,7 @@ namespace Raptor {
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
-		virtual void OnImGuiRender() override;
-
+		
 		void Begin();
 		void End();
 	private:

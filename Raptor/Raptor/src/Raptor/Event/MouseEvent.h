@@ -5,7 +5,7 @@
 
 namespace Raptor {
 
-	class RAPTOR_API MouseMovedEvent : public Event
+	class MouseMovedEvent : public Event
 	{
 	public:
 		MouseMovedEvent(float x,float y)
@@ -28,7 +28,7 @@ namespace Raptor {
 	};
 
 
-	class RAPTOR_API MouseScrolledEvent : public Event
+	class MouseScrolledEvent : public Event
 	{
 	public:
 		MouseScrolledEvent(float xOffset, float yOffset)
@@ -50,7 +50,7 @@ namespace Raptor {
 		float m_XOffset, m_YOffset;
 	};
 
-	class RAPTOR_API MouseButtonEvent : public Event
+	class MouseButtonEvent : public Event
 	{
 	public:
 		inline int GetMouseButton() const { return m_Button; }
@@ -63,7 +63,7 @@ namespace Raptor {
 		int m_Button;
 	};
 
-	class RAPTOR_API MouseButtonPressedEvent : public MouseButtonEvent
+	class MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
 		MouseButtonPressedEvent(int button)
@@ -79,7 +79,7 @@ namespace Raptor {
 		EVENT_CLASS_TYPE(MouseButtonPressed)
 	};
 
-	class RAPTOR_API MouseButtonReleasedEvent : public MouseButtonEvent
+	class MouseButtonReleasedEvent : public MouseButtonEvent
 	{
 	public:
 		MouseButtonReleasedEvent(int button)

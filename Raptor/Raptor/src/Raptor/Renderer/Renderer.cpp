@@ -10,8 +10,15 @@ namespace Raptor {
 
 	void Renderer::Init()
 	{
+		RT_PROFILE_FUNCTION();
+		
 		RenderCommand::Init();
 		Renderer2D::Init();
+	}
+
+	void Renderer::Shutdown()
+	{
+		Renderer2D::Shutdown();
 	}
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
@@ -32,8 +39,8 @@ namespace Raptor {
 	{
 		shader->Bind();
 		
-		std::dynamic_pointer_cast<OpenGLShader>( shader)->UploadUniformMat4("u_ViewProjection", s_SceneData->viewProjection);
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_Transform", transform);
+		shader->SetMat4("u_ViewProjection", s_SceneData->viewProjection);
+		shader->SetMat4("u_Transform", transform);
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
 	}

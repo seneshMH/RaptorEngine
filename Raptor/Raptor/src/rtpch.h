@@ -15,6 +15,7 @@
 #include<unordered_set>
 
 #include "Raptor/Core/Log.h"
+#include "Raptor/Debug/Instrumentor.h"
 
 
 #ifdef RT_PLATFORM_WINDOWS

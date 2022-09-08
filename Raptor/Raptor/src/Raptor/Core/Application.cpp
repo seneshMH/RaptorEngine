@@ -15,10 +15,12 @@ namespace Raptor {
 
 	Application::Application()
 	{
+		RT_PROFILE_FUNCTION();
+
 		RT_CORE_ASSERT(!s_Instance, "Application already exists");
 		s_Instance = this;
 
-		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window = Window::Create();
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 	
 		Renderer::Init();
@@ -26,47 +28,72 @@ namespace Raptor {
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 	}
+
 	Application::~Application()
 	{
+		RT_PROFILE_FUNCTION();
+
+		Renderer::Shutdown();
 	}
+
 	void Application::Run()
 	{
+		RT_PROFILE_FUNCTION();
+
 		while (m_Running) 
 		{
+			RT_PROFILE_SCOPE("Run Loop");
+
 			float time = (float)glfwGetTime();
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
 			if (!m_Minimized)
 			{
-				for (Layer* layer : m_LayerStack)
 				{
-					layer->OnUpdate(timestep);
-				}
-			}
-			m_ImGuiLayer->Begin();
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnImGuiRender();
-			}
+					RT_PROFILE_SCOPE("Layer stack OnUpdate");
 
-			m_ImGuiLayer->End();
+					for (Layer* layer : m_LayerStack)
+					{
+						layer->OnUpdate(timestep);
+					}
+				}
+				m_ImGuiLayer->Begin();
+				{
+					RT_PROFILE_SCOPE("Layer stack OnImGuiRender");
+
+					for (Layer* layer : m_LayerStack)
+					{
+						layer->OnImGuiRender();
+					}
+				}
+				m_ImGuiLayer->End();
+			}
+			
 			m_Window->OnUpdate();
 		}
 	}
 
 	void Application::PushLayer(Layer* layer)
 	{
+		RT_PROFILE_FUNCTION();
+
 		m_LayerStack.PushLayer(layer);
+		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* overlay)
 	{
+		RT_PROFILE_FUNCTION();
+
 		m_LayerStack.PushOverlay(overlay);
+		overlay->OnAttach();
 	}
 
 	void Application::OnEvent(Event& e)
 	{
+		RT_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
@@ -88,6 +115,8 @@ namespace Raptor {
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
+		RT_PROFILE_FUNCTION();
+
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
 		{
 			m_Minimized = true;
