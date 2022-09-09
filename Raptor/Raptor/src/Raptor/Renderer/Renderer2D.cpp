@@ -61,9 +61,7 @@ namespace Raptor {
 		});
 
 		s_Data.QuadVertexArray->AddvertexBuffer(s_Data.QuadVertexBuffer);
-
 		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
-
 
 		uint32_t* quadIndices = new uint32_t[s_Data.MaxIndices];
 
@@ -80,7 +78,6 @@ namespace Raptor {
 
 			offset += 4;
 		}
-
 
 		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices,s_Data.MaxIndices);
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
@@ -131,7 +128,7 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		uint32_t dataSize = (uint8_t*)s_Data.QuadVertexBufferptr - (uint8_t*)s_Data.QuadVertexBufferBase;
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferptr - (uint8_t*)s_Data.QuadVertexBufferBase);
 		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase,dataSize);
 
 		Flush();
