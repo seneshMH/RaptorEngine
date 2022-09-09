@@ -34,15 +34,16 @@ void Sandbox2D::OnUpdate(Raptor::Timestep ts)
 	}
 
 	{
-		RT_PROFILE_SCOPE("Render Draw");
+		static float rotation = 0.0f;
+		rotation += ts * 50.0f;
+
 		Raptor::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-		//Raptor::Renderer2D::DrawRotatedQuad({ 0.5f,-0.5f }, { 0.5f,0.75f }, glm::radians(-45.0f), m_SquareColor);
-		
 		Raptor::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f,0.8f }, m_SquareColor);
 		Raptor::Renderer2D::DrawQuad({ -0.5f, -0.5f }, { 0.5f,0.75f }, m_SquareColor);
-		Raptor::Renderer2D::DrawQuad({ -5.0f,-5.0f,-0.1f }, { 10.0f,10.0f }, m_CheckerBordTexture,10.0f);
-		Raptor::Renderer2D::DrawQuad({ -0.5f,-0.5f,0.0f }, { 1.0f,1.0f }, m_CheckerBordTexture,10.0f);
+		Raptor::Renderer2D::DrawQuad({ 0.0f,0.0f,-0.1f }, { 10.0f,10.0f }, m_CheckerBordTexture,10.0f);
+		Raptor::Renderer2D::DrawRotatedQuad(glm::vec3(0.0f), {1.0f,1.0f}, rotation, m_CheckerBordTexture, 10.0f);
+		Raptor::Renderer2D::DrawRotatedQuad({ 1.0f,0.0f }, { 0.5f,0.75f },-45.0f, m_SquareColor);
 		
 		Raptor::Renderer2D::EndScene();
 	}
