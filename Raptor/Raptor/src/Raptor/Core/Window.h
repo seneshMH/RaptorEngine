@@ -2,7 +2,7 @@
 
 #include "rtpch.h"
 
-#include "Raptor/Core/core.h"
+#include "Raptor/Core/Base.h"
 #include "Raptor/Event/Event.h"
 
 namespace Raptor {

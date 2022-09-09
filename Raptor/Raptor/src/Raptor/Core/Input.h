@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Raptor/Core/core.h"
+#include "Raptor/Core/Base.h"
 
 namespace Raptor {
 	class Input {
