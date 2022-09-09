@@ -65,9 +65,9 @@ namespace Raptor {
 				break;
 			case Raptor::ShaderDataType::Float4:	return 4;
 				break;
-			case Raptor::ShaderDataType::Mat3:		return 3 * 3;
+			case Raptor::ShaderDataType::Mat3:		return 3 /* * 3*/;
 				break;
-			case Raptor::ShaderDataType::Mat4:		return 4 * 4;
+			case Raptor::ShaderDataType::Mat4:		return 4 /* * 4*/;
 				break;
 			case Raptor::ShaderDataType::Int:		return 1;
 				break;
