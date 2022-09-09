@@ -38,8 +38,8 @@ void Sandbox2D::OnUpdate(Raptor::Timestep ts)
 		Raptor::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		Raptor::Renderer2D::DrawQuad({ -1.0f,0.0f }, { 0.8f,0.8f }, m_SquareColor);
-		Raptor::Renderer2D::DrawRotatedQuad({ 0.5f,-0.5f }, { 0.5f,0.75f }, glm::radians(-45.0f), m_SquareColor);
-		Raptor::Renderer2D::DrawQuad({ 0.0f,0.0f,-0.14f }, { 10.0f,10.0f }, m_CheckerBordTexture,10.0f,glm::vec4(1.0f,0.9f,0.9f,1.0f));
+		//Raptor::Renderer2D::DrawRotatedQuad({ 0.5f,-0.5f }, { 0.5f,0.75f }, glm::radians(-45.0f), m_SquareColor);
+		//Raptor::Renderer2D::DrawQuad({ 0.0f,0.0f,-0.14f }, { 10.0f,10.0f }, m_CheckerBordTexture,10.0f,glm::vec4(1.0f,0.9f,0.9f,1.0f));
 		
 		Raptor::Renderer2D::EndScene();
 	}
