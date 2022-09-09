@@ -1,5 +1,5 @@
 #pragma once
-#include "Raptor/Core/core.h"
+#include "Raptor/Core/Base.h"
 #include "Raptor/Core/Layer.h"
 
 #include "Raptor/Event/ApplicationEvent.h"
@@ -15,6 +15,8 @@ namespace Raptor {
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
+
+		virtual void OnEvent(Event& e) override;
 		
 		void Begin();
 		void End();
