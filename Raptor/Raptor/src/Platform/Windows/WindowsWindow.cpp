@@ -5,6 +5,7 @@
 #include "Raptor/Event/ApplicationEvent.h"
 #include "Raptor/Event/KeyEvent.h"
 #include "Raptor/Event/MouseEvent.h"
+#include "Raptor/Renderer/Renderer.h"
 
 #include "Platform/OpenGl/OpenGlContext.h"
 
@@ -16,12 +17,6 @@ namespace Raptor {
 	{
 		RT_CORE_ERROR("GLFW ERROR ({0}) : {1}", error, discription);
 	}
-
-	Scope<Window> Window::Create(const WindowProps& props)
-	{
-		return CreateScope<WindowsWindow>(props);
-	}
-
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
@@ -60,6 +55,12 @@ namespace Raptor {
 
 		{
 			RT_PROFILE_SCOPE("glfw create window");
+
+			#if defined(RT_DEBUG)
+				if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
+					glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+			#endif
+
 			m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 		}
