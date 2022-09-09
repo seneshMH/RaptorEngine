@@ -166,44 +166,36 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
+		constexpr size_t quadVertexCount = 4;
+
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
 			FlushAndRest();
 		}
 
-		const float texIndex = 0.0f; //White texture
+		const float textureIndex = 0.0f; //White texture
+
+		constexpr glm::vec2 textureCoords[] = { 
+			{ 0.0f, 0.0f }, 
+			{ 1.0f, 0.0f }, 
+			{ 1.0f, 1.0f }, 
+			{ 0.0f, 1.0f } 
+		};
+
 		const float tilingFactor = 1.0f;
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[0];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = {0.0f,0.0f};
-		s_Data.QuadVertexBufferptr->TexIndex = texIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[1];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 1.0f,0.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = texIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[2];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 1.0f,1.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = texIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[3];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 0.0f,1.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = texIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
+		for (size_t i = 0; i < quadVertexCount; i++)
+		{
+			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
+			s_Data.QuadVertexBufferptr->Color = color;
+			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
+			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferptr++;
+		}
 
 		s_Data.QuadIndexCount += 6;
 
@@ -219,14 +211,23 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
+		constexpr size_t quadVertexCount = 4;
+
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
 			FlushAndRest();
 		}
 
 		constexpr glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f };
-		
 		float textureIndex = 0.0f;
+
+		constexpr glm::vec2 textureCoords[] = {
+			{ 0.0f, 0.0f },
+			{ 1.0f, 0.0f },
+			{ 1.0f, 1.0f },
+			{ 0.0f, 1.0f }
+		};
+
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
 		{
 			if (*s_Data.TextureSlots[i].get() == *texture.get())
@@ -246,33 +247,17 @@ namespace Raptor {
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[0];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 0.0f,0.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
 
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[1];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 1.0f,0.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
+		for (size_t i = 0; i < quadVertexCount; i++)
+		{
+			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
+			s_Data.QuadVertexBufferptr->Color = color;
+			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
+			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferptr++;
+		}
 
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[2];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 1.0f,1.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[3];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 0.0f,1.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
 
 		s_Data.QuadIndexCount += 6;
 
@@ -288,45 +273,36 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
+		constexpr size_t quadVertexCount = 4;
+
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
 			FlushAndRest();
 		}
 
-		const float texIndex = 0.0f; //White texture
+		const float textureIndex = 0.0f; //White texture
 		const float tilingFactor = 1.0f;
+
+		constexpr glm::vec2 textureCoords[] = {
+			{ 0.0f, 0.0f },
+			{ 1.0f, 0.0f },
+			{ 1.0f, 1.0f },
+			{ 0.0f, 1.0f }
+		};
 		
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f,0.0f,1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[0];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 0.0f,0.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = texIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[1];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 1.0f,0.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = texIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[2];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 1.0f,1.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = texIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[3];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 0.0f,1.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = texIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
+		for (size_t i = 0; i < quadVertexCount; i++)
+		{
+			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
+			s_Data.QuadVertexBufferptr->Color = color;
+			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
+			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferptr++;
+		}
 
 		s_Data.QuadIndexCount += 6;
 
@@ -342,6 +318,8 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
+		constexpr size_t quadVertexCount = 4;
+
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
 			FlushAndRest();
@@ -350,6 +328,14 @@ namespace Raptor {
 		constexpr glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f };
 
 		float textureIndex = 0.0f;
+
+		constexpr glm::vec2 textureCoords[] = {
+			{ 0.0f, 0.0f },
+			{ 1.0f, 0.0f },
+			{ 1.0f, 1.0f },
+			{ 0.0f, 1.0f }
+		};
+
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
 		{
 			if (*s_Data.TextureSlots[i].get() == *texture.get())
@@ -370,33 +356,15 @@ namespace Raptor {
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f,0.0f,1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[0];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 0.0f,0.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[1];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 1.0f,0.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[2];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 1.0f,1.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
-
-		s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[3];
-		s_Data.QuadVertexBufferptr->Color = color;
-		s_Data.QuadVertexBufferptr->TexCoords = { 0.0f,1.0f };
-		s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
-		s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
-		s_Data.QuadVertexBufferptr++;
+		for (size_t i = 0; i < quadVertexCount; i++)
+		{
+			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
+			s_Data.QuadVertexBufferptr->Color = color;
+			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
+			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferptr++;
+		}
 
 		s_Data.QuadIndexCount += 6;
 
