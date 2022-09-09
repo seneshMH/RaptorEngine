@@ -216,7 +216,6 @@ namespace Raptor {
 			FlushAndRest();
 		}
 
-		constexpr glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f };
 		float textureIndex = 0.0f;
 
 		constexpr glm::vec2 textureCoords[] = {
@@ -252,7 +251,7 @@ namespace Raptor {
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
 			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
-			s_Data.QuadVertexBufferptr->Color = color;
+			s_Data.QuadVertexBufferptr->Color = tintColor;
 			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
 			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
@@ -326,8 +325,6 @@ namespace Raptor {
 			FlushAndRest();
 		}
 
-		constexpr glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f };
-
 		float textureIndex = 0.0f;
 
 		constexpr glm::vec2 textureCoords[] = {
@@ -363,7 +360,7 @@ namespace Raptor {
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
 			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
-			s_Data.QuadVertexBufferptr->Color = color;
+			s_Data.QuadVertexBufferptr->Color = tintColor;
 			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
 			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
