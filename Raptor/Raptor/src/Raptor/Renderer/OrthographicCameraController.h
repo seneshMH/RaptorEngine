@@ -27,7 +27,7 @@ namespace Raptor {
 		OrthographicCamera& GetCamera() { return m_Camera; }
 		const OrthographicCamera& GetCamera() const { return m_Camera; }
 
-		void SetZoomlevel(float level) { m_ZoomLevel = level; }
+		void SetZoomlevel(float level) { m_ZoomLevel = level; CalculateView(); }
 		float GetZoomlevel() { return m_ZoomLevel; }
 
 		const OrthographicCameraBounds& GetBounds() const { return m_Bounds; }
@@ -35,6 +35,7 @@ namespace Raptor {
 		bool OnMouseScrolled(MouseScrolledEvent& e);
 		bool OnWindowResized(WindowResizeEvent& e);
 	private:
+		void CalculateView();
 		float m_AspectRatio = 16.0f / 9.0f;
 		float m_ZoomLevel = 1.0f;
 

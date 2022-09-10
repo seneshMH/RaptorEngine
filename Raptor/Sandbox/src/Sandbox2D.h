@@ -30,4 +30,7 @@ private:
 
 	ParticleSystem m_ParticleSystem;
 	ParticleProps m_Particle;
+
+	uint32_t m_MapWidth, m_MapHeight;
+	std::unordered_map<char, Raptor::Ref<Raptor::SubTexture2D >> m_TextureMap;
 };
