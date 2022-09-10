@@ -50,6 +50,11 @@ void Sandbox2D::OnAttach()
 	m_Particle.Position = { 0.0f, 0.0f };
 
 	m_CameraController.SetZoomlevel(5.0f);
+
+	Raptor::FrameBufferSpecification fbSpec;
+	fbSpec.Width = 1280;
+	fbSpec.Height = 720;
+	m_FrameBuffer = Raptor::FrameBuffer::Create(fbSpec);
 }
 
 void Sandbox2D::OnDetach()
@@ -68,6 +73,7 @@ void Sandbox2D::OnUpdate(Raptor::Timestep ts)
 	
 	{
 		RT_PROFILE_SCOPE("Render prep");
+		m_FrameBuffer->Bind();
 		Raptor::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Raptor::RenderCommand::Clear();
 	}
@@ -145,6 +151,7 @@ void Sandbox2D::OnUpdate(Raptor::Timestep ts)
 	
 	m_ParticleSystem.OnUpdate(ts);
 	m_ParticleSystem.OnRender(m_CameraController.GetCamera());
+	m_FrameBuffer->UnBind();
 }
 
 void Sandbox2D::OnImGuiRender()
@@ -227,8 +234,8 @@ void Sandbox2D::OnImGuiRender()
 
 	ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 
-	uint32_t textureID = m_CheckerBordTexture->GetRendererID();
-	ImGui::Image((void*)textureID,ImVec2(64.0f,64.0f));
+	uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
+	ImGui::Image((void*)textureID,ImVec2(800.0f,600.0f));
 
 	ImGui::End();
 

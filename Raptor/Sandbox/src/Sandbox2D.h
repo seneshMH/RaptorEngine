@@ -21,6 +21,8 @@ private:
 
 	Raptor::Ref<Raptor::Shader> m_FlatColorShader;
 	Raptor::Ref<Raptor::VertexArray> m_SquareVA;
+	Raptor::Ref<Raptor::FrameBuffer> m_FrameBuffer;
+
 
 	Raptor::Ref<Raptor::Texture2D> m_CheckerBordTexture;
 	Raptor::Ref<Raptor::Texture2D> m_SpriteSheet;

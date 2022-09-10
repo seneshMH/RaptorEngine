@@ -17,6 +17,7 @@
 #include "Raptor/Renderer/RenderCommand.h"
 #include "Raptor/Renderer/Buffer.h"
 #include "Raptor/Renderer/Shader.h"
+#include "Raptor/Renderer/FrameBuffer.h"
 #include "Raptor/Renderer/VertexArray.h"
 #include "Raptor/Renderer/OrthographicCamera.h"
 #include "Raptor/Renderer/Texture.h"
