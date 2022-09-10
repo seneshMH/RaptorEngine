@@ -1,6 +1,8 @@
 #pragma once
 #include <Raptor.h>
 
+#include "ParticleSystem.h"
+
 class Sandbox2D : public Raptor::Layer
 {
 public:
@@ -19,9 +21,18 @@ private:
 
 	Raptor::Ref<Raptor::Shader> m_FlatColorShader;
 	Raptor::Ref<Raptor::VertexArray> m_SquareVA;
+	Raptor::Ref<Raptor::FrameBuffer> m_FrameBuffer;
+
 
 	Raptor::Ref<Raptor::Texture2D> m_CheckerBordTexture;
+	Raptor::Ref<Raptor::Texture2D> m_SpriteSheet;
+	Raptor::Ref<Raptor::SubTexture2D> m_TextureStairs, m_TextureBarrels, m_TextureTree;
 
 	glm::vec4 m_SquareColor = { 0.2f,0.1f,0.8f,1.0f };
 
+	ParticleSystem m_ParticleSystem;
+	ParticleProps m_Particle;
+
+	uint32_t m_MapWidth, m_MapHeight;
+	std::unordered_map<char, Raptor::Ref<Raptor::SubTexture2D >> m_TextureMap;
 };

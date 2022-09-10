@@ -6,6 +6,16 @@
 #include "Raptor/Event/MouseEvent.h"
 
 namespace Raptor {
+
+	struct OrthographicCameraBounds
+	{
+		float Left, Right;
+		float Bottom, Top;
+
+		float GetWidth() { return Right - Left; }
+		float GetHeight() { return Top - Bottom; }
+	};
+
 	class OrthographicCameraController 
 	{
 	public:
@@ -17,14 +27,19 @@ namespace Raptor {
 		OrthographicCamera& GetCamera() { return m_Camera; }
 		const OrthographicCamera& GetCamera() const { return m_Camera; }
 
-		void SetZoomlevel(float level) { m_ZoomLevel = level; }
+		void SetZoomlevel(float level) { m_ZoomLevel = level; CalculateView(); }
 		float GetZoomlevel() { return m_ZoomLevel; }
+
+		const OrthographicCameraBounds& GetBounds() const { return m_Bounds; }
 	private:
 		bool OnMouseScrolled(MouseScrolledEvent& e);
 		bool OnWindowResized(WindowResizeEvent& e);
 	private:
+		void CalculateView();
 		float m_AspectRatio = 16.0f / 9.0f;
 		float m_ZoomLevel = 1.0f;
+
+		OrthographicCameraBounds m_Bounds;
 		OrthographicCamera m_Camera;
 
 		bool m_Rotation = false;
@@ -34,5 +49,6 @@ namespace Raptor {
 
 		float m_CameraTranslationSpeed = 5.0f;
 		float m_CameraRotationSpeed = 180.0f;
+
 	};
 }

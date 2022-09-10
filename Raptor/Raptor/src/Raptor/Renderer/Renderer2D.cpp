@@ -203,12 +203,12 @@ namespace Raptor {
 		s_Data.stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D> texture, float tililingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tililingFactor, const glm::vec4& tintColor)
 	{
 		DrawQuad({ position.x,position.y,0.0f }, size, texture,tililingFactor,tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D> texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		RT_PROFILE_FUNCTION();
 
@@ -227,6 +227,66 @@ namespace Raptor {
 			{ 1.0f, 1.0f },
 			{ 0.0f, 1.0f }
 		};
+
+		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+		{
+			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			{
+				textureIndex = (float)i;
+				break;
+			}
+		}
+
+		if (textureIndex == 0.0f)
+		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+				FlushAndRest();
+
+			textureIndex = (float)s_Data.TextureSlotIndex;
+			s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+			s_Data.TextureSlotIndex++;
+		}
+
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
+
+
+		for (size_t i = 0; i < quadVertexCount; i++)
+		{
+			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
+			s_Data.QuadVertexBufferptr->Color = tintColor;
+			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
+			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferptr++;
+		}
+
+
+		s_Data.QuadIndexCount += 6;
+
+		s_Data.stats.QuadCount++;
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor )
+	{
+		DrawQuad({ position.x,position.y,0.0f }, size, subTexture, tilingFactor, tintColor);
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor)
+	{
+		RT_PROFILE_FUNCTION();
+
+		constexpr size_t quadVertexCount = 4;
+
+		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
+		{
+			FlushAndRest();
+		}
+
+		float textureIndex = 0.0f;
+
+		const glm::vec2* textureCoords = subTexture->GetTexCoords();
+		const Ref<Texture2D> texture = subTexture->GetTexture();
 
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
 		{
@@ -294,7 +354,7 @@ namespace Raptor {
 		};
 		
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f,0.0f,1.0f })
+			* glm::rotate(glm::mat4(1.0f),rotation, { 0.0f,0.0f,1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; i++)
@@ -312,12 +372,12 @@ namespace Raptor {
 		s_Data.stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D> texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		DrawRotatedQuad({ position.x,position.y,0.0f }, size, rotation, texture,tilingFactor,tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D> texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		RT_PROFILE_FUNCTION();
 
@@ -357,7 +417,7 @@ namespace Raptor {
 		}
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f,0.0f,1.0f })
+			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f,0.0f,1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; i++)
@@ -374,6 +434,66 @@ namespace Raptor {
 
 		s_Data.stats.QuadCount++;
 	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor)
+	{
+		DrawRotatedQuad({ position.x,position.y,0.0f }, size, rotation, subTexture, tilingFactor, tintColor);
+	}
+	
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor )
+	{
+		RT_PROFILE_FUNCTION();
+
+		constexpr size_t quadVertexCount = 4;
+
+		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
+		{
+			FlushAndRest();
+		}
+
+		float textureIndex = 0.0f;
+
+		const glm::vec2* textureCoords = subTexture->GetTexCoords();
+		const Ref<Texture2D> texture = subTexture->GetTexture();
+
+		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+		{
+			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			{
+				textureIndex = (float)i;
+				break;
+			}
+		}
+
+		if (textureIndex == 0.0f)
+		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+				FlushAndRest();
+
+			textureIndex = (float)s_Data.TextureSlotIndex;
+			s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+			s_Data.TextureSlotIndex++;
+		}
+
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f,0.0f,1.0f })
+			* glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
+
+		for (size_t i = 0; i < quadVertexCount; i++)
+		{
+			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
+			s_Data.QuadVertexBufferptr->Color = tintColor;
+			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
+			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferptr++;
+		}
+
+		s_Data.QuadIndexCount += 6;
+
+		s_Data.stats.QuadCount++;
+	}
+
 
 	void Renderer2D::ResetStats()
 	{
