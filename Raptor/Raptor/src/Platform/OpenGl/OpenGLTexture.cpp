@@ -60,7 +60,7 @@ namespace Raptor {
 		RT_CORE_ASSERT(internalFormat & dataFormat, "Format not suported");
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-		glTextureStorage2D(m_RendererID, 1, internalFormat, m_Height, m_Width);
+		glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

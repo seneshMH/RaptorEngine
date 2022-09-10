@@ -23,6 +23,8 @@ private:
 	Raptor::Ref<Raptor::VertexArray> m_SquareVA;
 
 	Raptor::Ref<Raptor::Texture2D> m_CheckerBordTexture;
+	Raptor::Ref<Raptor::Texture2D> m_SpriteSheet;
+	Raptor::Ref<Raptor::SubTexture2D> m_TextureStairs, m_TextureBarrels, m_TextureTree;
 
 	glm::vec4 m_SquareColor = { 0.2f,0.1f,0.8f,1.0f };
 

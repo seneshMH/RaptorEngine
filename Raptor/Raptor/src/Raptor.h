@@ -20,5 +20,6 @@
 #include "Raptor/Renderer/VertexArray.h"
 #include "Raptor/Renderer/OrthographicCamera.h"
 #include "Raptor/Renderer/Texture.h"
+#include "Raptor/Renderer/SubTexture2D.h"
 #include "Raptor/Renderer/OrthographicCameraController.h"
 
