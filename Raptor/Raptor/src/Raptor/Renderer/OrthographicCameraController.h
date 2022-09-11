@@ -24,6 +24,8 @@ namespace Raptor {
 		void OnUpdate(Timestep ts);
 		void OnEvevnt(Event& e);
 
+		void OnResize(float width,float height);
+
 		OrthographicCamera& GetCamera() { return m_Camera; }
 		const OrthographicCamera& GetCamera() const { return m_Camera; }
 
