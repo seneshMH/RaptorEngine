@@ -11,7 +11,7 @@ namespace Raptor {
 	class Application
 	{
 	public:
-		Application();
+		Application(const std::string& name = "Raptor");
 		virtual ~Application();
 
 		void Run();
