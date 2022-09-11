@@ -5,6 +5,8 @@
 namespace Raptor {
 	class Input {
 	public:
+		virtual ~Input() = default;
+
 		inline static bool IsKeyPressed(int keycode) { return s_Instance->IsKeyPressedImpl(keycode); }
 
 		inline static bool IsMouseButtonPressed(int button) { return s_Instance->IsMouseButtonPressedImpl(button); }
@@ -13,6 +15,9 @@ namespace Raptor {
 		inline static float GetMouseY() { return s_Instance->GetMouseYImpl(); }
 
 	protected:
+
+		Input() = default;
+
 		virtual bool IsKeyPressedImpl(int keycode) = 0;
 
 		virtual bool IsMouseButtonPressedImpl(int button) = 0;
