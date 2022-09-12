@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "Raptor/Renderer/Camera.h"
+#include "SceneCamera.h"
 
 namespace Raptor {
 
@@ -39,12 +39,11 @@ namespace Raptor {
 
 	struct CameraComponent
 	{
-		Raptor::Camera Camera;
+		Raptor::SceneCamera Camera;
 		bool Primary = true;
+		bool FixedAspectRatio = false;
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
-		CameraComponent(const glm::mat4& projection)
-			:Camera(projection) {}
 	};
 }
