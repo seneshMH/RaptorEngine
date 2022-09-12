@@ -191,7 +191,10 @@ namespace Raptor {
 
 	void EditorLayer::OnEvent(Raptor::Event& e)
 	{
-		m_CameraController.OnEvevnt(e);
+		if (e.GetEventType() != EventType::WindowResize)
+		{
+			m_CameraController.OnEvevnt(e);
+		}
 	}
 
 }
