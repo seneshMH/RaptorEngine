@@ -63,6 +63,7 @@ namespace Raptor {
 
 		m_CameraEntity.AddCompnent<NativScriptComponent>().Bind<CameraController>();
 
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnDetach()
@@ -168,6 +169,8 @@ namespace Raptor {
 
 			ImGui::EndMenuBar();
 		}
+
+		m_SceneHierarchyPanel.OnImGuiRender();
 
 		ImGui::Begin("Setings");
 
