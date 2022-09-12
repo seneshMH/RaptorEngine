@@ -167,7 +167,7 @@ namespace Raptor {
 		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 		
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		if (m_ViewportSize != *(glm::vec2*)&viewportPanelSize)
+		if (m_ViewportSize != *(glm::vec2*)&viewportPanelSize && m_ViewportSize.x > 0 && m_ViewportSize.y > 0)
 		{
 			m_ViewportSize = { viewportPanelSize.x,viewportPanelSize.y };
 			m_FrameBuffer->Resize((uint32_t)viewportPanelSize.x, (uint32_t)viewportPanelSize.y);
