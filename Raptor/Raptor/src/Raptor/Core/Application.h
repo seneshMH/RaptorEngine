@@ -11,7 +11,7 @@ namespace Raptor {
 	class Application
 	{
 	public:
-		Application();
+		Application(const std::string& name = "Raptor");
 		virtual ~Application();
 
 		void Run();
@@ -25,6 +25,8 @@ namespace Raptor {
 		Window& GetWindow() { return *m_Window; }
 
 		void Close();
+
+		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);

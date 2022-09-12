@@ -142,3 +142,51 @@ workspace "Raptor"
             defines "RT_DIST"
             runtime "Release"
             optimize "on"
+
+    project "Raptor-Editor"
+        location "Raptor-Editor"
+        kind "ConsoleApp"
+        language "c++"
+        cppdialect "c++17"
+        staticruntime "on"
+    
+        targetdir ("bin/"..outputdir.."/%{prj.name}")
+        objdir ("bin-int/"..outputdir.."/%{prj.name}")
+
+        files
+        {
+            "%{prj.name}/src/**.h",
+            "%{prj.name}/src/**.cpp"
+        }
+
+        includedirs
+        {
+            "Raptor/vendor/spdlog/include",
+            "Raptor/src",
+            "Raptor/vendor",
+            "%{IncludeDir.glm}"
+        }
+
+        links
+        {
+            "Raptor"
+        }
+
+        filter "system:windows"
+            systemversion "latest"
+
+        filter "configurations:Debug"
+            defines "RT_DEBUG"
+            runtime "Debug"
+            symbols "on"
+
+        filter "configurations:Release"
+            defines "RT_RELEASE"
+            runtime "Release"
+            optimize "on"
+
+        filter "configurations:Dist"
+            defines "RT_DIST"
+            runtime "Release"
+            optimize "on"    
+
