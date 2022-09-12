@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "Raptor/Renderer/Camera.h"
 
 namespace Raptor {
 
@@ -34,5 +35,16 @@ namespace Raptor {
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color)
 			:Color(color) {}
+	};
+
+	struct CameraComponent
+	{
+		Raptor::Camera Camera;
+		bool Primary = true;
+
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent&) = default;
+		CameraComponent(const glm::mat4& projection)
+			:Camera(projection) {}
 	};
 }

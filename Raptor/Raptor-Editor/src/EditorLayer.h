@@ -25,6 +25,10 @@ namespace Raptor {
 
 		Ref<Scene> m_ActiveScene;
 		Entity m_SqureEntity;
+		Entity m_CameraEntity;
+		Entity m_SecondCamera;
+
+		bool m_PrimaryCamera = true;
 		
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
