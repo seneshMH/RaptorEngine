@@ -22,6 +22,9 @@ namespace Raptor {
 		Ref<VertexArray> m_SquareVA;
 		Ref<FrameBuffer> m_FrameBuffer;
 		Ref<Texture2D> m_CheckerBordTexture;
+
+		Ref<Scene> m_ActiveScene;
+		Entity m_SqureEntity;
 		
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
