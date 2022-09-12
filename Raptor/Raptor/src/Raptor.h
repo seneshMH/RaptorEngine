@@ -26,4 +26,5 @@
 #include "Raptor/Scene/Scene.h"
 #include "Raptor/Scene/Component.h"
 #include "Raptor/Scene/Entity.h"
+#include "Raptor/Scene/ScriptableEntity.h"
 

@@ -33,6 +33,36 @@ namespace Raptor {
 		auto& cc =  m_SecondCamera.AddCompnent<CameraComponent>();
 		cc.Primary = false;
 
+		class CameraController : public ScriptableEntity
+		{
+		public:
+			void OnCreate()
+			{
+			}
+
+			void OnDestroy()
+			{
+
+			}
+
+			void OnUpdate(Timestep ts)
+			{
+				auto& transform = GetComponent<TransformComponent>().Transform;
+				float speed = 5.0f;
+
+				if (Input::IsKeyPressed(RT_KEY_A))
+					transform[3][0] -= speed * ts;
+				if (Input::IsKeyPressed(RT_KEY_D))
+					transform[3][0] += speed * ts;
+				if (Input::IsKeyPressed(RT_KEY_W))
+					transform[3][1] += speed * ts;
+				if (Input::IsKeyPressed(RT_KEY_S))
+					transform[3][1] -= speed * ts;
+			}
+		};
+
+		m_CameraEntity.AddCompnent<NativScriptComponent>().Bind<CameraController>();
+
 	}
 
 	void EditorLayer::OnDetach()
