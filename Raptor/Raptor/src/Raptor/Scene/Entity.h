@@ -15,7 +15,9 @@ namespace Raptor {
 		T& AddCompnent(Args&&... args)
 		{
 			RT_CORE_ASSERT(!HasComponent<T>(), "Entity already has component !");
-			return m_Scene->m_Registry.emplace<T>(m_EntityHandel, std::forward<Args>(args)...);
+			T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandel, std::forward<Args>(args)...);
+			m_Scene->OnComponentAdded<T>(*this, component);
+			return component;
 		}
 
 		template<typename T>
@@ -39,6 +41,7 @@ namespace Raptor {
 		}
 
 		operator bool() const { return m_EntityHandel != entt::null; }
+		operator entt::entity() const { return m_EntityHandel; }
 		operator uint32_t() const { return (uint32_t)m_EntityHandel; }
 
 		bool operator ==(const Entity& other) const { return m_EntityHandel == other.m_EntityHandel && m_Scene == other.m_Scene; }
