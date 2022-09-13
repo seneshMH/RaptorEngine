@@ -26,13 +26,13 @@ namespace Raptor {
 				DrawEntityNode(entity);
 			});
 
-		ImGui::End();
-
-		//TODO : NOT WORKING
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
 			m_SelectionContext = {};
-	
+
+		ImGui::End();
+
 		ImGui::Begin("Properties Panel");
+
 		if (m_SelectionContext)
 		{
 			DrawComponents(m_SelectionContext);
