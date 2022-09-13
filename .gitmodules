@@ -10,3 +10,6 @@
 [submodule "Raptor/Raptor/vendor/imgui"]
 	path = Raptor/Raptor/vendor/imgui
 	url = https://github.com/seneshMH/imgui.git
+[submodule "Raptor/Raptor/vendor/yaml-cpp"]
+	path = Raptor/Raptor/vendor/yaml-cpp
+	url = https://github.com/seneshMH/yaml-cpp.git
