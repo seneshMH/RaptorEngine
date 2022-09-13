@@ -24,6 +24,10 @@ namespace Raptor {
 		auto Square =  m_ActiveScene->CreateEntity("Green Square");
 		Square.AddCompnent<SpriteRendererComponent>( glm::vec4{ 0.0f,1.0f,0.0f,1.0f });
 
+		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
+		redSquare.AddCompnent<SpriteRendererComponent>(glm::vec4{ 1.0f,0.0f,0.0f,1.0f });
+
+
 		m_SqureEntity = Square;
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
