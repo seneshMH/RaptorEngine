@@ -30,10 +30,10 @@ namespace Raptor {
 
 		m_SqureEntity = Square;
 
-		m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
 		m_CameraEntity.AddCompnent<CameraComponent>();
 
-		m_SecondCamera = m_ActiveScene->CreateEntity("Clip Space Camera Entity");
+		m_SecondCamera = m_ActiveScene->CreateEntity("Camera B");
 		auto& cc =  m_SecondCamera.AddCompnent<CameraComponent>();
 		cc.Primary = false;
 
@@ -176,7 +176,7 @@ namespace Raptor {
 
 		m_SceneHierarchyPanel.OnImGuiRender();
 
-		ImGui::Begin("Setings");
+		ImGui::Begin("Render Stats");
 
 		auto stats = Renderer2D::GetStats();
 		ImGui::Text("Renderer2D Stats :");
@@ -184,31 +184,6 @@ namespace Raptor {
 		ImGui::Text("Quads		: %d", stats.QuadCount);
 		ImGui::Text("Vertices	: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices		: %d", stats.GetTotalIndexCount());
-
-		if (m_SqureEntity)
-		{
-			ImGui::Separator();
-			ImGui::Text("%s", m_SqureEntity.GetComponent<TagComponent>().Tag.c_str());
-			auto& squareColor = m_SqureEntity.GetComponent<SpriteRendererComponent>().Color;
-			ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
-			ImGui::Separator();
-		}
-
-		ImGui::DragFloat3("Camera Transform", 
-			glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
-
-		if (ImGui::Checkbox("Camera A", &m_PrimaryCamera))
-		{
-			m_CameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
-			m_SecondCamera.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
-		}
-
-		{
-			auto& camera = m_SecondCamera.GetComponent<CameraComponent>().Camera;
-			float orthoSize = camera.GetOrthographicsize();
-			if (ImGui::DragFloat("Second camera ortho size", &orthoSize))
-				camera.SetOrthographicSize(orthoSize);
-		}
 
 		ImGui::End();
 
