@@ -13,7 +13,7 @@ namespace Raptor {
 		uint32_t height;
 
 		WindowProps(const std::string& title = "Raptor Engine",
-			uint32_t width = 1280, uint32_t height = 720)
+			uint32_t width = 1600, uint32_t height = 900)
 			:Title(title), width(width), height(height)
 		{
 

@@ -13,12 +13,61 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		m_CheckerBordTexture = Raptor::Texture2D::Create("assets/images/checker.png");
+		m_CheckerBordTexture = Texture2D::Create("assets/images/checker.png");
 		
-		Raptor::FrameBufferSpecification fbSpec;
+		FrameBufferSpecification fbSpec;
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
-		m_FrameBuffer = Raptor::FrameBuffer::Create(fbSpec);
+		m_FrameBuffer = FrameBuffer::Create(fbSpec);
+
+		m_ActiveScene = CreateRef<Scene>();
+		auto Square =  m_ActiveScene->CreateEntity("Green Square");
+		Square.AddCompnent<SpriteRendererComponent>( glm::vec4{ 0.0f,1.0f,0.0f,1.0f });
+
+		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
+		redSquare.AddCompnent<SpriteRendererComponent>(glm::vec4{ 1.0f,0.0f,0.0f,1.0f });
+
+
+		m_SqureEntity = Square;
+
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
+		m_CameraEntity.AddCompnent<CameraComponent>();
+
+		m_SecondCamera = m_ActiveScene->CreateEntity("Camera B");
+		auto& cc =  m_SecondCamera.AddCompnent<CameraComponent>();
+		cc.Primary = false;
+
+		class CameraController : public ScriptableEntity
+		{
+		public:
+			void OnCreate()
+			{
+			}
+
+			void OnDestroy()
+			{
+
+			}
+
+			void OnUpdate(Timestep ts)
+			{
+				auto& translation = GetComponent<TransformComponent>().Translation;
+				float speed = 5.0f;
+
+				if (Input::IsKeyPressed(RT_KEY_A))
+					translation.x -= speed * ts;
+				if (Input::IsKeyPressed(RT_KEY_D))
+					translation.x += speed * ts;
+				if (Input::IsKeyPressed(RT_KEY_W))
+					translation.y += speed * ts;
+				if (Input::IsKeyPressed(RT_KEY_S))
+					translation.y -= speed * ts;
+			}
+		};
+
+		m_CameraEntity.AddCompnent<NativScriptComponent>().Bind<CameraController>();
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnDetach()
@@ -27,60 +76,30 @@ namespace Raptor {
 
 	}
 
-	void EditorLayer::OnUpdate(Raptor::Timestep ts)
+	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		RT_PROFILE_FUNCTION();
 
-		if (Raptor::FrameBufferSpecification spec = m_FrameBuffer->GetSpecification();
+		if (FrameBufferSpecification spec = m_FrameBuffer->GetSpecification();
 			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
 			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
 
 		if(m_ViewportFocused)
 			m_CameraController.OnUpdate(ts);
 
-		Raptor::Renderer2D::ResetStats();
 
-		{
-			RT_PROFILE_SCOPE("Render prep");
-			m_FrameBuffer->Bind();
-			Raptor::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-			Raptor::RenderCommand::Clear();
-		}
-
-
-		{
-			static float rotation = 0.0f;
-			rotation += ts * 50.0f;
-
-			Raptor::Renderer2D::BeginScene(m_CameraController.GetCamera());
-
-			Raptor::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f,0.8f }, m_SquareColor);
-			Raptor::Renderer2D::DrawQuad({ -0.5f, -0.5f }, { 0.5f,0.75f }, m_SquareColor);
-			Raptor::Renderer2D::DrawQuad({ 0.0f,0.0f,-0.1f }, { 20.0f,20.0f }, m_CheckerBordTexture, 10.0f);
-			Raptor::Renderer2D::DrawRotatedQuad(glm::vec3(0.0f), { 1.0f,1.0f }, glm::radians(rotation), m_CheckerBordTexture, 10.0f);
-			Raptor::Renderer2D::DrawRotatedQuad({ 1.0f,0.0f }, { 0.5f,0.75f }, glm::radians(-45.0f), m_SquareColor);
-
-			Raptor::Renderer2D::EndScene();
-
-			Raptor::Renderer2D::BeginScene(m_CameraController.GetCamera());
-
-			for (float y = -5.0f; y < 5.0f; y += 0.5f)
-			{
-				for (float x = -5.0f; x < 5.0f; x += 0.5f)
-				{
-					glm::vec4 color = { (x + 5.0f) / 10.0f,0.4f,(y + 5.0f) / 10.0f,0.7f };
-					Raptor::Renderer2D::DrawQuad({ x, y }, { 0.45f,0.45f }, color);
-				}
-			}
-
-			Raptor::Renderer2D::EndScene();
-		}
-
+		Renderer2D::ResetStats();
+		m_FrameBuffer->Bind();
+		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		RenderCommand::Clear();
+		m_ActiveScene->OnUpdate(ts);
 		m_FrameBuffer->UnBind();
 	}
 
@@ -135,12 +154,16 @@ namespace Raptor {
 
 		// Submit the DockSpace
 		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
+		float minSizeX = style.WindowMinSize.x;
+		style.WindowMinSize.x = 370.0f;
+
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
-
+		style.WindowMinSize.x = minSizeX;
 
 		if (ImGui::BeginMenuBar())
 		{
@@ -148,23 +171,24 @@ namespace Raptor {
 			{
 				// Disabling fullscreen would allow the window to be moved to the front of other windows,
 				// which we can't undo at the moment without finer window depth/z control.
-				if (ImGui::MenuItem("Exit")) Raptor::Application::Get().Close();
+				if (ImGui::MenuItem("Exit")) Application::Get().Close();
 				ImGui::EndMenu();
 			}
 
 			ImGui::EndMenuBar();
 		}
 
-		ImGui::Begin("Setings");
+		m_SceneHierarchyPanel.OnImGuiRender();
 
-		auto stats = Raptor::Renderer2D::GetStats();
+		ImGui::Begin("Render Stats");
+
+		auto stats = Renderer2D::GetStats();
 		ImGui::Text("Renderer2D Stats :");
 		ImGui::Text("Draw Calls	: %d", stats.DrawCalls);
 		ImGui::Text("Quads		: %d", stats.QuadCount);
 		ImGui::Text("Vertices	: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices		: %d", stats.GetTotalIndexCount());
 
-		ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -189,7 +213,7 @@ namespace Raptor {
 		
 	}
 
-	void EditorLayer::OnEvent(Raptor::Event& e)
+	void EditorLayer::OnEvent(Event& e)
 	{
 		if (e.GetEventType() != EventType::WindowResize)
 		{
