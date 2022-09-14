@@ -2,6 +2,9 @@
 
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Raptor/Scene/SceneSrializer.h"
+
 namespace Raptor {
 
 	EditorLayer::EditorLayer()
@@ -21,6 +24,7 @@ namespace Raptor {
 		m_FrameBuffer = FrameBuffer::Create(fbSpec);
 
 		m_ActiveScene = CreateRef<Scene>();
+#if 0
 		auto Square =  m_ActiveScene->CreateEntity("Green Square");
 		Square.AddCompnent<SpriteRendererComponent>( glm::vec4{ 0.0f,1.0f,0.0f,1.0f });
 
@@ -66,8 +70,10 @@ namespace Raptor {
 		};
 
 		m_CameraEntity.AddCompnent<NativScriptComponent>().Bind<CameraController>();
-
+#endif
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		
 	}
 
 	void EditorLayer::OnDetach()
@@ -171,6 +177,17 @@ namespace Raptor {
 			{
 				// Disabling fullscreen would allow the window to be moved to the front of other windows,
 				// which we can't undo at the moment without finer window depth/z control.
+				if (ImGui::MenuItem("save"))
+				{
+					SceneSrializer serializer(m_ActiveScene);
+					serializer.Serialize("assets/scenes/Example.raptor");
+				}
+				if (ImGui::MenuItem("Load"))
+				{
+					SceneSrializer serializer(m_ActiveScene);
+					serializer.DeSerialize("assets/scenes/Example.raptor");
+				}
+
 				if (ImGui::MenuItem("Exit")) Application::Get().Close();
 				ImGui::EndMenu();
 			}
