@@ -124,9 +124,9 @@ namespace Raptor {
 			out << YAML::Key << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveVerticalFOV();
 			out << YAML::Key << "PerspectiveNear" << YAML::Value << camera.GetPerspectiveNearClip();
 			out << YAML::Key << "PerspectiveFar" << YAML::Value << camera.GetPerspectiveFarClip();
-			out << YAML::Key << "OrthograpicSize" << YAML::Value << camera.GetOrthographicsize();
-			out << YAML::Key << "OrthograpicNear" << YAML::Value << camera.GetOrthographicNearClip();
-			out << YAML::Key << "OrthograpicFar" << YAML::Value << camera.GetOrthographicFarClip();
+			out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthographicsize();
+			out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
+			out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
 			out << YAML::EndMap;//Camera
 
 			out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
@@ -136,7 +136,7 @@ namespace Raptor {
 
 		if (entity.HasComponent<SpriteRendererComponent>())
 		{
-			out << YAML::Key << "SpriteRenderer";
+			out << YAML::Key << "SpriteRendererComponent";
 			out << YAML::BeginMap;
 
 			auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
@@ -228,15 +228,15 @@ namespace Raptor {
 					cc.Camera.SetPerspectiveNearClip(cameraProps["PerspectiveNear"].as<float>());
 					cc.Camera.SetPerspectiveFarClip(cameraProps["PerspectiveFar"].as<float>());
 					
-					cc.Camera.SetOrthographicSize(cameraProps["OrthograpicSize"].as<float>());
-					cc.Camera.SetOrthographicNearClip(cameraProps["OrthograpicNear"].as<float>());
-					cc.Camera.SetOrthographicFarClip(cameraProps["OrthograpicFar"].as<float>());
+					cc.Camera.SetOrthographicSize(cameraProps["OrthographicSize"].as<float>());
+					cc.Camera.SetOrthographicNearClip(cameraProps["OrthographicNear"].as<float>());
+					cc.Camera.SetOrthographicFarClip(cameraProps["OrthographicFar"].as<float>());
 
 					cc.Primary = cameraComponent["Primary"].as<bool>();
 					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
 				}
 
-				auto spriteRendererComponent = entity["SpriteRenderer"];
+				auto spriteRendererComponent = entity["SpriteRendererComponent"];
 				if (spriteRendererComponent)
 				{
 					auto& src = desirializedEntity.AddCompnent<SpriteRendererComponent>();
