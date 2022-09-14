@@ -13,3 +13,6 @@
 [submodule "Raptor/Raptor/vendor/yaml-cpp"]
 	path = Raptor/Raptor/vendor/yaml-cpp
 	url = https://github.com/seneshMH/yaml-cpp.git
+[submodule "Raptor/Raptor/vendor/ImGizmo"]
+	path = Raptor/Raptor/vendor/ImGizmo
+	url = https://github.com/seneshMH/ImGuizmo.git
