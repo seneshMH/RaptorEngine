@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Raptor/Scene/SceneSrializer.h"
+#include "Raptor/utils/PlatformUtils.h"
 
 namespace Raptor {
 
@@ -177,15 +178,19 @@ namespace Raptor {
 			{
 				// Disabling fullscreen would allow the window to be moved to the front of other windows,
 				// which we can't undo at the moment without finer window depth/z control.
-				if (ImGui::MenuItem("save"))
+				if (ImGui::MenuItem("New", "Ctrl+N"))
 				{
-					SceneSrializer serializer(m_ActiveScene);
-					serializer.Serialize("assets/scenes/Example.raptor");
+					NewScene();
 				}
-				if (ImGui::MenuItem("Load"))
+
+				if (ImGui::MenuItem("Open...","Ctrl+O"))
 				{
-					SceneSrializer serializer(m_ActiveScene);
-					serializer.DeSerialize("assets/scenes/Example.raptor");
+					OpenScene();
+				}
+
+				if (ImGui::MenuItem("Save AS...", "Ctrl+Shift+S"))
+				{
+					SaveSceneAs();
 				}
 
 				if (ImGui::MenuItem("Exit")) Application::Get().Close();
@@ -235,6 +240,82 @@ namespace Raptor {
 		if (e.GetEventType() != EventType::WindowResize)
 		{
 			m_CameraController.OnEvevnt(e);
+		}
+
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<KeyPressedEvent>(RT_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+	}
+
+	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
+	{
+		if (e.GetRepeatCount() > 0)
+			return false;
+
+		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+		
+		switch (e.GetKeyCode())
+		{
+			case Key::N:
+			{
+				if (control)
+				{
+					NewScene();
+				}
+				break;
+			}
+			case Key::O:
+			{
+				if (control)
+				{
+					OpenScene();
+				}
+				break;
+			}
+
+			case Key::S:
+			{
+				if (control && shift)
+				{
+					SaveSceneAs();
+				}
+				break;
+			}
+			default:
+				break;
+		}
+	}
+
+	void EditorLayer::NewScene()
+	{
+		m_ActiveScene = CreateRef<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::OpenScene()
+	{
+		std::string filePath = FileDalogs::OpenFile("Raptor Scene (*.raptor)\0*.raptor\0");
+
+		if (!filePath.empty())
+		{
+			m_ActiveScene = CreateRef<Scene>();
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+			SceneSrializer serializer(m_ActiveScene);
+			serializer.DeSerialize(filePath);
+		}
+	}
+
+	void EditorLayer::SaveSceneAs()
+	{
+		std::string filePath = FileDalogs::SaveFile("Raptor Scene (*.raptor)\0*.raptor\0");
+
+		if (!filePath.empty())
+		{
+			SceneSrializer serializer(m_ActiveScene);
+			serializer.Serialize(filePath);
 		}
 	}
 
