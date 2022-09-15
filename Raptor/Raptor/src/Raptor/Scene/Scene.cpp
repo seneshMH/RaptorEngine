@@ -110,7 +110,7 @@ namespace Raptor {
 			auto& cameraComponent = view.get<CameraComponent>(entity);
 			if (!cameraComponent.FixedAspectRatio)
 			{
-				cameraComponent.Camera.SetViewportSize(width, height);
+				cameraComponent.Camera.SetviewportSize(width, height);
 			}
 		}
 	}
@@ -145,7 +145,7 @@ namespace Raptor {
 	template<>
 	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
 	{
-		component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+		component.Camera.SetviewportSize(m_ViewportWidth, m_ViewportHeight);
 	}
 
 	template<>
