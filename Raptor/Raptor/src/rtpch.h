@@ -1,5 +1,13 @@
 #pragma once
 
+#include "Raptor/Core/PlatformDetecttion.h"
+
+#ifdef RT_PLATFORM_WINDOWS
+	#ifndef NOMINMAX
+		#define NOMINMAX
+	#endif
+#endif
+
 #include<iostream>
 #include <ostream>
 #include<memory>
@@ -16,7 +24,7 @@
 
 #include "Raptor/Core/Log.h"
 #include "Raptor/Debug/Instrumentor.h"
-
+#include "Raptor/Core/Base.h"
 
 #ifdef RT_PLATFORM_WINDOWS
 	#include<Windows.h>
