@@ -17,15 +17,8 @@
 		#define RT_DEBUGBREAK()
 #endif // RT_DEBUG
 
-
-#ifdef RT_ENABLE_ASSERTS
-	#define RT_ASSERT(x, ...) {if(!(x)) {RT_ERROR("Assertion faild : {0}",__VA_ARGS__); RT_DEBUGBREAK(); }}
-	#define RT_CORE_ASSERT(x, ...) {if(!(x)) {RT_CORE_ERROR("Assertion faild : {0}",__VA_ARGS__); RT_DEBUGBREAK(); }}
-#else
-	#define RT_ASSERT(x,...)
-	#define RT_CORE_ASSERT(x,...)
-#endif // RT_ENABLE_ASSERTS
-
+#define RT_EXPAND_MACRO(x) x
+#define RT_STRINGIFY_MACRO(x) #x
 
 #define BIT(x) (1 << x)
 #define RT_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
@@ -47,3 +40,6 @@ namespace Raptor {
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
 }
+
+#include "Raptor/Core/Log.h"
+#include "Raptor/Core/Assert.h"
