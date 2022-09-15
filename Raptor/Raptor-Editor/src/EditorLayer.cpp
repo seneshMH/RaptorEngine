@@ -23,6 +23,7 @@ namespace Raptor {
 		m_CheckerBordTexture = Texture2D::Create("assets/images/checker.png");
 		
 		FrameBufferSpecification fbSpec;
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8 , FramebufferTextureFormat::RGBA8 ,FramebufferTextureFormat::Depth};
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_FrameBuffer = FrameBuffer::Create(fbSpec);
@@ -233,7 +234,7 @@ namespace Raptor {
 		
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-		uint64_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
+		uint64_t textureID = m_FrameBuffer->GetColorAttachmentRendererID(1);
 		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(m_ViewportSize.x, m_ViewportSize.y), ImVec2(0, 1), ImVec2(1, 0));
 
 		//Gizmos
