@@ -20,9 +20,9 @@ namespace Raptor {
 	Entity Scene::CreateEntity(const std::string& name)
 	{
 		Entity entity = { m_Registry.create(),this };
-		entity.AddCompnent<TransformComponent>();
+		entity.AddComponent<TransformComponent>();
 
-		auto& tag = entity.AddCompnent<TagComponent>();
+		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
 		
 		return entity;

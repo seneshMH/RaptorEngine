@@ -32,19 +32,19 @@ namespace Raptor {
 		m_EditorCamera = EditorCamera(30.0f,16.0f/9.0f,0.1f,1000.0f);
 #if 0
 		auto Square =  m_ActiveScene->CreateEntity("Green Square");
-		Square.AddCompnent<SpriteRendererComponent>( glm::vec4{ 0.0f,1.0f,0.0f,1.0f });
+		Square.AddComponent<SpriteRendererComponent>( glm::vec4{ 0.0f,1.0f,0.0f,1.0f });
 
 		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
-		redSquare.AddCompnent<SpriteRendererComponent>(glm::vec4{ 1.0f,0.0f,0.0f,1.0f });
+		redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f,0.0f,0.0f,1.0f });
 
 
 		m_SqureEntity = Square;
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
-		m_CameraEntity.AddCompnent<CameraComponent>();
+		m_CameraEntity.AddComponent<CameraComponent>();
 
 		m_SecondCamera = m_ActiveScene->CreateEntity("Camera B");
-		auto& cc =  m_SecondCamera.AddCompnent<CameraComponent>();
+		auto& cc =  m_SecondCamera.AddComponent<CameraComponent>();
 		cc.Primary = false;
 
 		class CameraController : public ScriptableEntity
@@ -75,7 +75,7 @@ namespace Raptor {
 			}
 		};
 
-		m_CameraEntity.AddCompnent<NativScriptComponent>().Bind<CameraController>();
+		m_CameraEntity.AddComponent<NativScriptComponent>().Bind<CameraController>();
 #endif
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 

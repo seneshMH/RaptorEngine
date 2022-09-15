@@ -16,6 +16,7 @@ namespace YAML {
 			node.push_back(rhs.x);
 			node.push_back(rhs.y);
 			node.push_back(rhs.z);
+			node.SetStyle(EmitterStyle::Flow);
 			return node;
 		}
 
@@ -43,6 +44,7 @@ namespace YAML {
 			node.push_back(rhs.y);
 			node.push_back(rhs.z);
 			node.push_back(rhs.w);
+			node.SetStyle(EmitterStyle::Flow);
 			return node;
 		}
 
@@ -174,7 +176,7 @@ namespace Raptor {
 
 	void SceneSrializer::SerializeRuntime(const std::string& filepath)
 	{
-		RT_CORE_ASSERT(false, "");
+		RT_CORE_ASSERT(false);
 	}
 
 	bool SceneSrializer::DeSerialize(const std::string& filepath)
@@ -218,7 +220,7 @@ namespace Raptor {
 				auto cameraComponent = entity["CameraComponent"];
 				if (cameraComponent)
 				{
-					auto& cc = desirializedEntity.AddCompnent<CameraComponent>();
+					auto& cc = desirializedEntity.AddComponent<CameraComponent>();
 
 					auto& cameraProps = cameraComponent["Camera"];
 
@@ -239,7 +241,7 @@ namespace Raptor {
 				auto spriteRendererComponent = entity["SpriteRendererComponent"];
 				if (spriteRendererComponent)
 				{
-					auto& src = desirializedEntity.AddCompnent<SpriteRendererComponent>();
+					auto& src = desirializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 				}
 
@@ -251,7 +253,7 @@ namespace Raptor {
 
 	bool SceneSrializer::DeSerializeRuntime(const std::string& filepath)
 	{
-		RT_CORE_ASSERT(false,"");
+		RT_CORE_ASSERT(false);
 		return false;
 	}
 
