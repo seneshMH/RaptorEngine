@@ -1,6 +1,7 @@
 #pragma once
 #include <entt.hpp>
 #include "Raptor/Core/Timestep.h"
+#include "Raptor/Renderer/EditorCamera.h"
 
 namespace Raptor {
 	class Entity;
@@ -14,7 +15,8 @@ namespace Raptor {
 		Entity CreateEntity(const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
 
-		void OnUpdate(Timestep ts);
+		void OnUpdateRunTime(Timestep ts);
+		void OnUpdateEditor(Timestep ts,EditorCamera& camera);
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		Entity GetPrimaryCameraEntity();

@@ -2,6 +2,8 @@
 #include <Raptor.h>
 #include "Panels/SceneHierarchyPanel.h"
 
+#include "Raptor/Renderer/EditorCamera.h"
+
 namespace Raptor {
 
 	class EditorLayer : public Raptor::Layer
@@ -36,6 +38,8 @@ namespace Raptor {
 		Entity m_SecondCamera;
 
 		bool m_PrimaryCamera = true;
+
+		EditorCamera m_EditorCamera;
 		
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
