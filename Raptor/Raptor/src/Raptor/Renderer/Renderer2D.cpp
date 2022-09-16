@@ -16,6 +16,8 @@ namespace Raptor {
 		glm::vec2 TexCoords;
 		float TexIndex;
 		float TilingFactor;
+
+		int EntityID;
 	};
 
 	struct Renderer2DData
@@ -58,6 +60,7 @@ namespace Raptor {
 			{ShaderDataType::Float2,"a_TexCoord"},
 			{ShaderDataType::Float,"a_TexIndex"},
 			{ShaderDataType::Float,"a_TilingFactor"},
+			{ShaderDataType::Int,"a_EntityID"}
 		});
 
 		s_Data.QuadVertexArray->AddvertexBuffer(s_Data.QuadVertexBuffer);
@@ -353,7 +356,7 @@ namespace Raptor {
 		s_Data.stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4 transform, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::mat4 transform, const glm::vec4& color, int entityID)
 	{
 		RT_PROFILE_FUNCTION();
 
@@ -382,6 +385,7 @@ namespace Raptor {
 			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
 			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferptr->EntityID = entityID;
 			s_Data.QuadVertexBufferptr++;
 		}
 
@@ -390,7 +394,7 @@ namespace Raptor {
 		s_Data.stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4 transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::mat4 transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor, int entityID)
 	{
 		RT_PROFILE_FUNCTION();
 
@@ -436,6 +440,7 @@ namespace Raptor {
 			s_Data.QuadVertexBufferptr->TexCoords = textureCoords[i];
 			s_Data.QuadVertexBufferptr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferptr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferptr->EntityID = entityID;
 			s_Data.QuadVertexBufferptr++;
 		}
 
@@ -536,6 +541,10 @@ namespace Raptor {
 		s_Data.stats.QuadCount++;
 	}
 
+	void Renderer2D::DrawSprite(const glm::mat4 transform, SpriteRendererComponent& src, int entityID)
+	{
+		DrawQuad(transform, src.Color,entityID);
+	}
 
 	void Renderer2D::ResetStats()
 	{
