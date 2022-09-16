@@ -18,11 +18,14 @@ workspace "Raptor"
     IncludeDir["glm"] = "Raptor/vendor/glm"
     IncludeDir["stb_image"] = "Raptor/vendor/stb_image"
     IncludeDir["entt"] = "Raptor/vendor/entt/include"
+    IncludeDir["yaml_cpp"] = "Raptor/vendor/yaml-cpp/include"
+    IncludeDir["ImGuizmo"] = "Raptor/vendor/ImGizmo"
 
     group "Dependencies"
         include "Raptor/vendor/GLFW"
         include "Raptor/vendor/GLAD"
         include "Raptor/vendor/imgui"
+        include "Raptor/vendor/yaml-cpp"
     group ""
 
     project "Raptor"
@@ -45,7 +48,9 @@ workspace "Raptor"
             "%{prj.name}/vendor/stb_image/**.h",
             "%{prj.name}/vendor/stb_image/**.cpp",
             "%{prj.name}/vendor/glm/glm/**.hpp",
-            "%{prj.name}/vendor/glm/glm/**.inl"
+            "%{prj.name}/vendor/glm/glm/**.inl",
+            "%{prj.name}/vendor/ImGizmo/ImGuizmo.h",
+            "%{prj.name}/vendor/ImGizmo/ImGuizmo.cpp"
         }
 
         defines
@@ -63,7 +68,9 @@ workspace "Raptor"
             "%{IncludeDir.ImGui}",
             "%{IncludeDir.glm}",
             "%{IncludeDir.stb_image}",
-            "%{IncludeDir.entt}"
+            "%{IncludeDir.entt}",
+            "%{IncludeDir.yaml_cpp}",
+            "%{IncludeDir.ImGuizmo}"
         }
 
         links
@@ -71,8 +78,12 @@ workspace "Raptor"
             "GLFW",
             "Glad",
             "ImGui",
+            "yaml-cpp",
             "opengl32.lib"
         }
+
+        filter "files:Raptor/vendor/ImGizmo/**.cpp"
+        flags {"NoPCH"}
 
         filter "system:windows"
             systemversion "latest"
@@ -167,7 +178,8 @@ workspace "Raptor"
             "Raptor/src",
             "Raptor/vendor",
             "%{IncludeDir.glm}",
-            "%{IncludeDir.entt}"
+            "%{IncludeDir.entt}",
+            "%{IncludeDir.ImGuizmo}"
         }
 
         links

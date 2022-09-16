@@ -2,6 +2,8 @@
 #include <Raptor.h>
 #include "Panels/SceneHierarchyPanel.h"
 
+#include "Raptor/Renderer/EditorCamera.h"
+
 namespace Raptor {
 
 	class EditorLayer : public Raptor::Layer
@@ -18,6 +20,13 @@ namespace Raptor {
 		void OnEvent(Event& e) override;
 
 	private:
+		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+
+		void NewScene();
+		void OpenScene();
+		void SaveSceneAs();
+	private:
 		OrthographicCameraController m_CameraController;
 		Ref<Shader> m_FlatColorShader;
 		Ref<VertexArray> m_SquareVA;
@@ -28,15 +37,21 @@ namespace Raptor {
 		Entity m_SqureEntity;
 		Entity m_CameraEntity;
 		Entity m_SecondCamera;
+		
+		Entity m_HoveredEntity;
 
 		bool m_PrimaryCamera = true;
+
+		EditorCamera m_EditorCamera;
 		
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
-
-		glm::vec2 m_ViewportSize = {0.0f,0.0f};
+		glm::vec2 m_viewportSize = {0.0f,0.0f};
+		glm::vec2 m_ViewportBounds[2];
 
 		glm::vec4 m_SquareColor = { 0.2f,0.1f,0.8f,1.0f };
+
+		int m_GizmoType = -1;
 
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 	};

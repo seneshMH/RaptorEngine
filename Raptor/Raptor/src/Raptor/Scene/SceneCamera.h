@@ -14,7 +14,7 @@ namespace Raptor {
 		void SetOrthographic(float size, float nearClip, float farClip);
 		void SetPerspective(float verticalFov, float nearClip, float farClip);
 
-		void SetViewportSize(uint32_t width, uint32_t heigh);
+		void SetviewportSize(uint32_t width, uint32_t heigh);
 
 		float	GetPerspectiveVerticalFOV() const { return m_PerspectiveFov; }
 		void	SetPerspectiveVerticalFOV(float verticalFov) { m_PerspectiveFov = verticalFov; ReCalculateProjection(); }
