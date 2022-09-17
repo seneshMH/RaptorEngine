@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include "Raptor/Renderer/Texture.h"
 
 namespace Raptor {
 
@@ -11,5 +12,7 @@ namespace Raptor {
 		void OnImGuiRender();
 	private:
 		std::filesystem::path m_CurrentDirectory;
+		Ref<Texture2D> m_DirectoryIcon;
+		Ref<Texture2D> m_FileIcon;
 	};
 }
