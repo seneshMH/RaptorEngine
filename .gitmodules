@@ -16,3 +16,6 @@
 [submodule "Raptor/Raptor/vendor/ImGizmo"]
 	path = Raptor/Raptor/vendor/ImGizmo
 	url = https://github.com/seneshMH/ImGuizmo.git
+[submodule "Raptor/Raptor/vendor/Box2D"]
+	path = Raptor/Raptor/vendor/Box2D
+	url = https://github.com/seneshMH/box2d.git

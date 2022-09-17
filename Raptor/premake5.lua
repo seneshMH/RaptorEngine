@@ -20,12 +20,14 @@ workspace "Raptor"
     IncludeDir["entt"] = "Raptor/vendor/entt/include"
     IncludeDir["yaml_cpp"] = "Raptor/vendor/yaml-cpp/include"
     IncludeDir["ImGuizmo"] = "Raptor/vendor/ImGizmo"
+    IncludeDir["Box2D"] = "Raptor/vendor/Box2D/include"
 
     group "Dependencies"
         include "Raptor/vendor/GLFW"
         include "Raptor/vendor/GLAD"
         include "Raptor/vendor/imgui"
         include "Raptor/vendor/yaml-cpp"
+        include "Raptor/vendor/Box2D"
     group ""
 
     project "Raptor"
@@ -70,7 +72,8 @@ workspace "Raptor"
             "%{IncludeDir.stb_image}",
             "%{IncludeDir.entt}",
             "%{IncludeDir.yaml_cpp}",
-            "%{IncludeDir.ImGuizmo}"
+            "%{IncludeDir.ImGuizmo}",
+            "%{IncludeDir.Box2D}"
         }
 
         links
@@ -79,6 +82,7 @@ workspace "Raptor"
             "Glad",
             "ImGui",
             "yaml-cpp",
+            "Box2D",
             "opengl32.lib"
         }
 
