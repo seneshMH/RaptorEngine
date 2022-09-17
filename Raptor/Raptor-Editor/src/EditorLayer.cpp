@@ -2,6 +2,7 @@
 
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <filesystem>
 
 #include "Raptor/Scene/SceneSrializer.h"
 #include "Raptor/utils/PlatformUtils.h"
@@ -10,6 +11,8 @@
 #include "ImGuizmo.h"
 
 namespace Raptor {
+
+	extern const std::filesystem::path s_AssetPath;
 
 	EditorLayer::EditorLayer()
 		:Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f, true)
@@ -272,6 +275,16 @@ namespace Raptor {
 		uint64_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(m_viewportSize.x, m_viewportSize.y), ImVec2(0, 1), ImVec2(1, 0));
 
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			{
+				const wchar_t* path = (const wchar_t*)payload->Data;
+				OpenScene(std::filesystem::path(s_AssetPath)/path);
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		//Gizmos
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 		if (selectedEntity && m_GizmoType != -1)
@@ -421,13 +434,18 @@ namespace Raptor {
 
 		if (!filePath.empty())
 		{
-			m_ActiveScene = CreateRef<Scene>();
-			m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
-			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-
-			SceneSrializer serializer(m_ActiveScene);
-			serializer.DeSerialize(filePath);
+			OpenScene(filePath);
 		}
+	}
+
+	void EditorLayer::OpenScene(const std::filesystem::path& path)
+	{
+		m_ActiveScene = CreateRef<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		SceneSrializer serializer(m_ActiveScene);
+		serializer.DeSerialize(path.string());
 	}
 
 	void EditorLayer::SaveSceneAs()
