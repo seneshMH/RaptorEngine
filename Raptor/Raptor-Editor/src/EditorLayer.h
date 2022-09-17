@@ -28,6 +28,11 @@ namespace Raptor {
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
 		void SaveSceneAs();
+
+		void OnScenePlay();
+		void OnSceneStop();
+
+		void UI_ToolBar();
 	private:
 		OrthographicCameraController m_CameraController;
 		Ref<Shader> m_FlatColorShader;
@@ -57,5 +62,15 @@ namespace Raptor {
 
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		ContentBrowserPanel m_ContentBrowserPanel;
+
+		Ref<Texture2D> m_IconPlay;
+		Ref<Texture2D>	m_IconStop;
+
+		enum class SceneState
+		{
+			Edit = 0, Play = 1
+		};
+
+		SceneState m_SceneState = SceneState::Edit;
 	};
 }
