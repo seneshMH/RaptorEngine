@@ -1,6 +1,7 @@
 #pragma once
 #include <Raptor.h>
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 
 #include "Raptor/Renderer/EditorCamera.h"
 
@@ -54,5 +55,6 @@ namespace Raptor {
 		int m_GizmoType = -1;
 
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+		ContentBrowserPanel m_ContentBrowserPanel;
 	};
 }
