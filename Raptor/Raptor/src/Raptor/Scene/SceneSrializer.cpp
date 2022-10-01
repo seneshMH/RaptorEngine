@@ -141,8 +141,10 @@ namespace Raptor {
 
 	static void SerializeEntity(YAML::Emitter& out,Entity entity)
 	{
+		RT_CORE_ASSERT(entity.HasComponent<IDComponent>());
+
 		out << YAML::BeginMap;
-		out << YAML::Key << "Entity" << YAML::Value << "2123431211";
+		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 		
 		if (entity.HasComponent<TagComponent>())
 		{
@@ -289,7 +291,7 @@ namespace Raptor {
 
 				RT_CORE_TRACE("Desirialize entity with ID = {0} , Name = {1}", uuid, name);
 
-				Entity desirializedEntity = m_Scene->CreateEntity(name);
+				Entity desirializedEntity = m_Scene->CreateEntityWithUUID(uuid,name);
 
 				auto transformComponent = entity["TransformComponent"];
 				if (transformComponent)

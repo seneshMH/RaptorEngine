@@ -1,5 +1,7 @@
 #pragma once
+#include "Raptor/Core/UUID.h"
 #include "Scene.h"
+#include "Component.h"
 
 #include <entt.hpp>
 
@@ -40,6 +42,8 @@ namespace Raptor {
 			return m_Scene->m_Registry.any_of<T>(m_EntityHandel);
 		}
 
+		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+		
 		operator bool() const { return m_EntityHandel != entt::null; }
 		operator entt::entity() const { return m_EntityHandel; }
 		operator uint32_t() const { return (uint32_t)m_EntityHandel; }

@@ -6,10 +6,17 @@
 #include<glm/gtx/quaternion.hpp>
 
 #include "SceneCamera.h"
-#include "ScriptableEntity.h"
 #include "Raptor/Renderer/Texture.h"
+#include "Raptor/Core/UUID.h"
 
 namespace Raptor {
+
+	struct IDComponent
+	{
+		UUID ID;
+		IDComponent() = default;
+		IDComponent(const IDComponent&) = default;
+	};
 
 	struct TagComponent
 	{
@@ -64,6 +71,7 @@ namespace Raptor {
 		CameraComponent(const CameraComponent&) = default;
 	};
 
+	class ScriptableEntity;
 	struct NativScriptComponent
 	{
 		ScriptableEntity* Instance = nullptr;

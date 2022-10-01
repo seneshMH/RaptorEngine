@@ -1,6 +1,7 @@
 #pragma once
 #include <entt.hpp>
 #include "Raptor/Core/Timestep.h"
+#include "Raptor/Core/UUID.h"
 #include "Raptor/Renderer/EditorCamera.h"
 
 class b2World;
@@ -14,6 +15,7 @@ namespace Raptor {
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = std::string());
+		Entity CreateEntityWithUUID(UUID uuid,const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
 
 		void OnRuntimeStart();
