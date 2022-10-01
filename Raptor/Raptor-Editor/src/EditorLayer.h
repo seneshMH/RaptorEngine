@@ -28,9 +28,14 @@ namespace Raptor {
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
 		void SaveSceneAs();
+		void SaveScene();
+
+		void SerializeScene(Ref<Scene> scene,const std::filesystem::path& path);
 
 		void OnScenePlay();
 		void OnSceneStop();
+
+		void OnDuplicateEntity();
 
 		void UI_ToolBar();
 	private:
@@ -41,6 +46,10 @@ namespace Raptor {
 		Ref<Texture2D> m_CheckerBordTexture;
 
 		Ref<Scene> m_ActiveScene;
+		Ref<Scene> m_EditorScene;
+
+		std::filesystem::path m_EditorScenePath;
+
 		Entity m_SqureEntity;
 		Entity m_CameraEntity;
 		Entity m_SecondCamera;

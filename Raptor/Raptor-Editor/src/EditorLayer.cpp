@@ -391,9 +391,23 @@ namespace Raptor {
 
 			case Key::S:
 			{
-				if (control && shift)
+				if (control)
 				{
-					SaveSceneAs();
+					if (shift)
+						SaveSceneAs();
+					else
+						SaveScene();
+				}
+				break;
+			}
+
+			//Commands
+
+			case Key::D:
+			{
+				if (control)
+				{
+					OnDuplicateEntity();
 				}
 				break;
 			}
@@ -440,6 +454,8 @@ namespace Raptor {
 		m_ActiveScene = CreateRef<Scene>();
 		m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		m_EditorScenePath = std::filesystem::path();
 	}
 
 	void EditorLayer::OpenScene()
@@ -454,12 +470,27 @@ namespace Raptor {
 
 	void EditorLayer::OpenScene(const std::filesystem::path& path)
 	{
-		m_ActiveScene = CreateRef<Scene>();
-		m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		if (m_SceneState != SceneState::Edit)
+			OnSceneStop();
+		
+		if (path.extension().string() != ".raptor")
+		{
+			RT_WARN("Could not load {0} as scene file", path.filename().string());
+			return;
+		}
 
-		SceneSrializer serializer(m_ActiveScene);
-		serializer.DeSerialize(path.string());
+		Ref<Scene> newScene = CreateRef<Scene>();
+		SceneSrializer serializer(newScene);
+
+		if (serializer.DeSerialize(path.string()))
+		{
+			m_EditorScene = newScene;
+			m_EditorScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
+
+			m_SceneHierarchyPanel.SetContext(m_EditorScene);
+			m_ActiveScene = m_EditorScene;
+			m_EditorScenePath = path;
+		}
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -468,9 +499,27 @@ namespace Raptor {
 
 		if (!filePath.empty())
 		{
-			SceneSrializer serializer(m_ActiveScene);
-			serializer.Serialize(filePath);
+			SerializeScene(m_ActiveScene, filePath);
+			m_EditorScenePath = filePath;
 		}
+	}
+
+	void EditorLayer::SaveScene()
+	{
+		if (!m_EditorScenePath.empty())
+		{
+			SerializeScene(m_ActiveScene, m_EditorScenePath);
+		}
+		else
+		{
+			SaveSceneAs();
+		}
+	}
+
+	void EditorLayer::SerializeScene(Ref<Scene> scene, const std::filesystem::path& path)
+	{
+		SceneSrializer serializer(scene);
+		serializer.Serialize(path.string());
 	}
 
 	void EditorLayer::UI_ToolBar()
@@ -506,14 +555,30 @@ namespace Raptor {
 
 	void EditorLayer::OnScenePlay()
 	{
-		m_ActiveScene->OnRuntimeStart();
 		m_SceneState = SceneState::Play;
+		m_ActiveScene = Scene::Copy(m_EditorScene);
+		m_ActiveScene->OnRuntimeStart();
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnSceneStop()
 	{
-		m_ActiveScene->OnRuntimeStop();
 		m_SceneState = SceneState::Edit;
+		m_ActiveScene->OnRuntimeStop();
+		m_ActiveScene = m_EditorScene;
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::OnDuplicateEntity()
+	{
+		if (m_SceneState != SceneState::Edit)
+			return;
+
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity)
+			m_EditorScene->DuplicateEntity(selectedEntity);
 	}
 
 }
