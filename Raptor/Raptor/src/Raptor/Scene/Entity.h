@@ -1,5 +1,7 @@
 #pragma once
+#include "Raptor/Core/UUID.h"
 #include "Scene.h"
+#include "Component.h"
 
 #include <entt.hpp>
 
@@ -16,6 +18,14 @@ namespace Raptor {
 		{
 			RT_CORE_ASSERT(!HasComponent<T>(), "Entity already has component !");
 			T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandel, std::forward<Args>(args)...);
+			m_Scene->OnComponentAdded<T>(*this, component);
+			return component;
+		}
+
+		template<typename T, typename... Args>
+		T& AddOrReplaceComponent(Args&&... args)
+		{
+			T& component = m_Scene->m_Registry.emplace_or_replace<T>(m_EntityHandel, std::forward<Args>(args)...);
 			m_Scene->OnComponentAdded<T>(*this, component);
 			return component;
 		}
@@ -39,6 +49,9 @@ namespace Raptor {
 		{
 			return m_Scene->m_Registry.any_of<T>(m_EntityHandel);
 		}
+
+		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+		const std::string& GetName() { return GetComponent<TagComponent>().Tag; }
 
 		operator bool() const { return m_EntityHandel != entt::null; }
 		operator entt::entity() const { return m_EntityHandel; }

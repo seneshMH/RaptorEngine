@@ -17,5 +17,5 @@
 #define RT_CORE_ASSERT(...) RT_EXPAND_MACRO( RT_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_CORE_, __VA_ARGS__) )
 #else
 #define RT_ASSERT(...)
-#define HZ_CORE_ASSERT(...)
+#define RT_CORE_ASSERT(...)
 #endif
