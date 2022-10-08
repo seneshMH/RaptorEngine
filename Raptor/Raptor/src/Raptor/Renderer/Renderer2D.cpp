@@ -20,6 +20,18 @@ namespace Raptor {
 		int EntityID;
 	};
 
+	struct CircleVertex
+	{
+		glm::vec3 WorldPosition;
+		glm::vec3 LocalPosition;
+
+		glm::vec4 Color;
+		float Thickness;
+		float Fade;
+
+		int EntityID;
+	};
+
 	struct Renderer2DData
 	{
 		static const uint32_t MaxQuads = 20000;
@@ -29,12 +41,22 @@ namespace Raptor {
 
 		Ref<VertexArray> QuadVertexArray;
 		Ref<VertexBuffer> QuadVertexBuffer;
-		Ref<Shader> TextureShader;
+		Ref<Shader> QuadShader;
 		Ref<Texture2D> WhiteTexture;
+
+
+		Ref<VertexArray> CircleVertexArray;
+		Ref<VertexBuffer> CircleVertexBuffer;
+		Ref<Shader> CircleShader;
 
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
 		QuadVertex* QuadVertexBufferptr = nullptr;
+
+		uint32_t CircleIndexCount = 0;
+		CircleVertex* CircleVertexBufferBase = nullptr;
+		CircleVertex* CircleVertexBufferptr = nullptr;
+
 
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; //0 is white texture
@@ -87,6 +109,22 @@ namespace Raptor {
 
 		delete[] quadIndices;
 
+		s_Data.CircleVertexArray = VertexArray::Create();
+		s_Data.CircleVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(CircleVertex));
+		s_Data.CircleVertexBuffer->SetLayout({
+			{ShaderDataType::Float3,"a_WorldPosition"},
+			{ShaderDataType::Float3,"a_LocalPosition"},
+			{ShaderDataType::Float4,"a_Color"},
+			{ShaderDataType::Float,"a_Thickness"},
+			{ShaderDataType::Float,"a_Fade"},
+			{ShaderDataType::Int,"a_EntityID"}
+			});
+
+		s_Data.CircleVertexArray->AddvertexBuffer(s_Data.CircleVertexBuffer);
+		s_Data.CircleVertexArray->SetIndexBuffer(quadIB);
+		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
+
+
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTexture = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTexture,sizeof(uint32_t));
@@ -97,9 +135,12 @@ namespace Raptor {
 			samplers[i] = i;
 		}
 
-		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetIntArray("u_Texture",samplers, s_Data.MaxTextureSlots);
+		s_Data.QuadShader = Shader::Create("assets/shaders/Renderer2DQuad.glsl");
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetIntArray("u_Texture",samplers, s_Data.MaxTextureSlots);
+
+		s_Data.CircleShader = Shader::Create("assets/shaders/Renderer2DCircle.glsl");
+
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
@@ -122,11 +163,18 @@ namespace Raptor {
 
 		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
 
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferptr = s_Data.QuadVertexBufferBase;
+		
+		s_Data.CircleShader->Bind();
+		s_Data.CircleShader->SetMat4("u_ViewProjection", viewProj);
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferptr = s_Data.CircleVertexBufferBase;
+
 		s_Data.TextureSlotIndex = 1;
 	}
 
@@ -134,11 +182,18 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferptr = s_Data.QuadVertexBufferBase;
+		
+		s_Data.CircleShader->Bind();
+		s_Data.CircleShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferptr = s_Data.CircleVertexBufferBase;
+		
 		s_Data.TextureSlotIndex = 1;
 	}
 
@@ -146,11 +201,18 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferptr = s_Data.QuadVertexBufferBase;
+		
+		s_Data.CircleShader->Bind();
+		s_Data.CircleShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferptr = s_Data.CircleVertexBufferBase;
+
 		s_Data.TextureSlotIndex = 1;
 	}
 
@@ -158,24 +220,36 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferptr - (uint8_t*)s_Data.QuadVertexBufferBase);
-		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase,dataSize);
-
 		Flush();
 	}
 
 	void Renderer2D::Flush()
 	{
-		if (s_Data.QuadIndexCount == 0)
-			return;
-
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+		if (s_Data.QuadIndexCount)
 		{
-			s_Data.TextureSlots[i]->Bind(i);
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferptr - (uint8_t*)s_Data.QuadVertexBufferBase);
+			s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+
+			for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+			{
+				s_Data.TextureSlots[i]->Bind(i);
+			}
+
+			s_Data.QuadShader->Bind();
+			RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
+			s_Data.stats.DrawCalls++;
 		}
 
-		RenderCommand::DrawIndexed(s_Data.QuadVertexArray,s_Data.QuadIndexCount);
-		s_Data.stats.DrawCalls++;
+		if (s_Data.CircleIndexCount)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.CircleVertexBufferptr - (uint8_t*)s_Data.CircleVertexBufferBase);
+			s_Data.CircleVertexBuffer->SetData(s_Data.CircleVertexBufferBase, dataSize);
+
+
+			s_Data.CircleShader->Bind();
+			RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
+			s_Data.stats.DrawCalls++;
+		}
 	}
 
 	void Renderer2D::FlushAndRest()
@@ -184,6 +258,10 @@ namespace Raptor {
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferptr = s_Data.QuadVertexBufferBase;
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferptr = s_Data.CircleVertexBufferBase;
+
 		s_Data.TextureSlotIndex = 1;
 	}
 
@@ -537,6 +615,32 @@ namespace Raptor {
 		}
 
 		s_Data.QuadIndexCount += 6;
+
+		s_Data.stats.QuadCount++;
+	}
+
+	void Renderer2D::DrawCircle(const glm::mat4 transform, const glm::vec4& color, float thickness, float fade, int entityID)
+	{
+		RT_PROFILE_FUNCTION();
+
+		//if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
+		//{
+			//FlushAndRest();
+		//}
+
+
+		for (size_t i = 0; i < 4; i++)
+		{
+			s_Data.CircleVertexBufferptr->WorldPosition = transform * s_Data.QuadVertexPosition[i];
+			s_Data.CircleVertexBufferptr->LocalPosition = s_Data.QuadVertexPosition[i] * 2.0f;
+			s_Data.CircleVertexBufferptr->Color = color;
+			s_Data.CircleVertexBufferptr->Thickness = thickness;
+			s_Data.CircleVertexBufferptr->Fade = fade;
+			s_Data.CircleVertexBufferptr->EntityID = entityID;
+			s_Data.CircleVertexBufferptr++;
+		}
+
+		s_Data.CircleIndexCount += 6;
 
 		s_Data.stats.QuadCount++;
 	}
