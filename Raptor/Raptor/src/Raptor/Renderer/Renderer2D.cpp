@@ -32,6 +32,15 @@ namespace Raptor {
 		int EntityID;
 	};
 
+
+	struct LineVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+
+		int EntityID;
+	};
+
 	struct Renderer2DData
 	{
 		static const uint32_t MaxQuads = 20000;
@@ -44,10 +53,13 @@ namespace Raptor {
 		Ref<Shader> QuadShader;
 		Ref<Texture2D> WhiteTexture;
 
-
 		Ref<VertexArray> CircleVertexArray;
 		Ref<VertexBuffer> CircleVertexBuffer;
 		Ref<Shader> CircleShader;
+
+		Ref<VertexArray> LineVertexArray;
+		Ref<VertexBuffer> LineVertexBuffer;
+		Ref<Shader> LineShader;
 
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
@@ -56,6 +68,12 @@ namespace Raptor {
 		uint32_t CircleIndexCount = 0;
 		CircleVertex* CircleVertexBufferBase = nullptr;
 		CircleVertex* CircleVertexBufferptr = nullptr;
+
+		uint32_t LineVertexCount = 0;
+		LineVertex* LineVertexBufferBase = nullptr;
+		LineVertex* LineVertexBufferptr = nullptr;
+
+		float LineWidth = 2.0f;
 
 
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
@@ -66,7 +84,7 @@ namespace Raptor {
 		Renderer2D::Statistics stats;
 	};
 
-	
+
 
 	static Renderer2DData s_Data;
 
@@ -76,14 +94,14 @@ namespace Raptor {
 
 		s_Data.QuadVertexArray = VertexArray::Create();
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
-		s_Data.QuadVertexBuffer->SetLayout( {
+		s_Data.QuadVertexBuffer->SetLayout({
 			{ShaderDataType::Float3,"a_Position"},
 			{ShaderDataType::Float4,"a_Color"},
 			{ShaderDataType::Float2,"a_TexCoord"},
 			{ShaderDataType::Float,"a_TexIndex"},
 			{ShaderDataType::Float,"a_TilingFactor"},
 			{ShaderDataType::Int,"a_EntityID"}
-		});
+			});
 
 		s_Data.QuadVertexArray->AddvertexBuffer(s_Data.QuadVertexBuffer);
 		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
@@ -104,11 +122,12 @@ namespace Raptor {
 			offset += 4;
 		}
 
-		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices,s_Data.MaxIndices);
+		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices, s_Data.MaxIndices);
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 
 		delete[] quadIndices;
 
+		//Circles
 		s_Data.CircleVertexArray = VertexArray::Create();
 		s_Data.CircleVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(CircleVertex));
 		s_Data.CircleVertexBuffer->SetLayout({
@@ -125,9 +144,21 @@ namespace Raptor {
 		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
 
 
+		//Lines
+		s_Data.LineVertexArray = VertexArray::Create();
+		s_Data.LineVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(LineVertex));
+		s_Data.LineVertexBuffer->SetLayout({
+			{ShaderDataType::Float3,"a_Position"},
+			{ShaderDataType::Float4,"a_Color"},
+			{ShaderDataType::Int,"a_EntityID"}
+			});
+
+		s_Data.LineVertexArray->AddvertexBuffer(s_Data.LineVertexBuffer);
+		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
+
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTexture = 0xffffffff;
-		s_Data.WhiteTexture->SetData(&whiteTexture,sizeof(uint32_t));
+		s_Data.WhiteTexture->SetData(&whiteTexture, sizeof(uint32_t));
 
 		int32_t samplers[s_Data.MaxTextureSlots];
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
@@ -137,16 +168,17 @@ namespace Raptor {
 
 		s_Data.QuadShader = Shader::Create("assets/shaders/Renderer2DQuad.glsl");
 		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetIntArray("u_Texture",samplers, s_Data.MaxTextureSlots);
+		s_Data.QuadShader->SetIntArray("u_Texture", samplers, s_Data.MaxTextureSlots);
 
 		s_Data.CircleShader = Shader::Create("assets/shaders/Renderer2DCircle.glsl");
+		s_Data.LineShader = Shader::Create("assets/shaders/Renderer2DLine.glsl");
 
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
 		s_Data.QuadVertexPosition[0] = { -0.5f, -0.5f,  0.0f,  1.0f };
-		s_Data.QuadVertexPosition[1] = {  0.5f, -0.5f,  0.0f,  1.0f };
-		s_Data.QuadVertexPosition[2] = {  0.5f,  0.5f,  0.0f,  1.0f };
+		s_Data.QuadVertexPosition[1] = { 0.5f, -0.5f,  0.0f,  1.0f };
+		s_Data.QuadVertexPosition[2] = { 0.5f,  0.5f,  0.0f,  1.0f };
 		s_Data.QuadVertexPosition[3] = { -0.5f,  0.5f,  0.0f,  1.0f };
 	}
 
@@ -155,6 +187,20 @@ namespace Raptor {
 		RT_PROFILE_FUNCTION();
 
 		delete[] s_Data.QuadVertexBufferBase;
+	}
+
+	void Renderer2D::StartBatch()
+	{
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferptr = s_Data.QuadVertexBufferBase;
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferptr = s_Data.CircleVertexBufferBase;
+
+		s_Data.LineVertexCount = 0;
+		s_Data.LineVertexBufferptr = s_Data.LineVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;
 	}
 
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
@@ -166,16 +212,13 @@ namespace Raptor {
 		s_Data.QuadShader->Bind();
 		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
 
-		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferptr = s_Data.QuadVertexBufferBase;
-		
 		s_Data.CircleShader->Bind();
 		s_Data.CircleShader->SetMat4("u_ViewProjection", viewProj);
 
-		s_Data.CircleIndexCount = 0;
-		s_Data.CircleVertexBufferptr = s_Data.CircleVertexBufferBase;
+		s_Data.LineShader->Bind();
+		s_Data.LineShader->SetMat4("u_ViewProjection", viewProj);
 
-		s_Data.TextureSlotIndex = 1;
+		StartBatch();
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
@@ -185,16 +228,13 @@ namespace Raptor {
 		s_Data.QuadShader->Bind();
 		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
-		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferptr = s_Data.QuadVertexBufferBase;
-		
 		s_Data.CircleShader->Bind();
 		s_Data.CircleShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
-		s_Data.CircleIndexCount = 0;
-		s_Data.CircleVertexBufferptr = s_Data.CircleVertexBufferBase;
-		
-		s_Data.TextureSlotIndex = 1;
+		s_Data.LineShader->Bind();
+		s_Data.LineShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+
+		StartBatch();
 	}
 
 	void Renderer2D::BeginScene(const EditorCamera& camera)
@@ -204,16 +244,13 @@ namespace Raptor {
 		s_Data.QuadShader->Bind();
 		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
-		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferptr = s_Data.QuadVertexBufferBase;
-		
 		s_Data.CircleShader->Bind();
 		s_Data.CircleShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
-		s_Data.CircleIndexCount = 0;
-		s_Data.CircleVertexBufferptr = s_Data.CircleVertexBufferBase;
+		s_Data.LineShader->Bind();
+		s_Data.LineShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
-		s_Data.TextureSlotIndex = 1;
+		StartBatch();
 	}
 
 	void Renderer2D::EndScene()
@@ -250,6 +287,17 @@ namespace Raptor {
 			RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
 			s_Data.stats.DrawCalls++;
 		}
+
+		if (s_Data.LineVertexCount)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.LineVertexBufferptr - (uint8_t*)s_Data.LineVertexBufferBase);
+			s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
+		
+			s_Data.LineShader->Bind();
+			RenderCommand::SetLineWidth(s_Data.LineWidth);
+			RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
+			s_Data.stats.DrawCalls++;
+		}
 	}
 
 	void Renderer2D::FlushAndRest()
@@ -283,11 +331,11 @@ namespace Raptor {
 
 		const float textureIndex = 0.0f; //White texture
 
-		constexpr glm::vec2 textureCoords[] = { 
-			{ 0.0f, 0.0f }, 
-			{ 1.0f, 0.0f }, 
-			{ 1.0f, 1.0f }, 
-			{ 0.0f, 1.0f } 
+		constexpr glm::vec2 textureCoords[] = {
+			{ 0.0f, 0.0f },
+			{ 1.0f, 0.0f },
+			{ 1.0f, 1.0f },
+			{ 0.0f, 1.0f }
 		};
 
 		const float tilingFactor = 1.0f;
@@ -312,7 +360,7 @@ namespace Raptor {
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tililingFactor, const glm::vec4& tintColor)
 	{
-		DrawQuad({ position.x,position.y,0.0f }, size, texture,tililingFactor,tintColor);
+		DrawQuad({ position.x,position.y,0.0f }, size, texture, tililingFactor, tintColor);
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
@@ -374,7 +422,7 @@ namespace Raptor {
 		s_Data.stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor )
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		DrawQuad({ position.x,position.y,0.0f }, size, subTexture, tilingFactor, tintColor);
 	}
@@ -455,7 +503,7 @@ namespace Raptor {
 			{ 0.0f, 1.0f }
 		};
 
-		
+
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
 			s_Data.QuadVertexBufferptr->Position = transform * s_Data.QuadVertexPosition[i];
@@ -529,7 +577,7 @@ namespace Raptor {
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		DrawRotatedQuad({ position.x,position.y,0.0f }, size,rotation, color);
+		DrawRotatedQuad({ position.x,position.y,0.0f }, size, rotation, color);
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
@@ -546,7 +594,7 @@ namespace Raptor {
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		DrawRotatedQuad({ position.x,position.y,0.0f }, size, rotation, texture,tilingFactor,tintColor);
+		DrawRotatedQuad({ position.x,position.y,0.0f }, size, rotation, texture, tilingFactor, tintColor);
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
@@ -564,8 +612,8 @@ namespace Raptor {
 	{
 		DrawRotatedQuad({ position.x,position.y,0.0f }, size, rotation, subTexture, tilingFactor, tintColor);
 	}
-	
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor )
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		RT_PROFILE_FUNCTION();
 
@@ -619,7 +667,7 @@ namespace Raptor {
 		s_Data.stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawCircle(const glm::mat4 transform, const glm::vec4& color, float thickness, float fade, int entityID)
+	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade, int entityID)
 	{
 		RT_PROFILE_FUNCTION();
 
@@ -645,12 +693,62 @@ namespace Raptor {
 		s_Data.stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawSprite(const glm::mat4 transform, SpriteRendererComponent& src, int entityID)
+	void Renderer2D::DrawLine(const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color, int entityID)
 	{
-		if(src.Texture)
-			DrawQuad(transform, src.Texture, src.TilingFactor,src.Color,entityID);
+		s_Data.LineVertexBufferptr->Position = p1;
+		s_Data.LineVertexBufferptr->Color = color;
+		s_Data.LineVertexBufferptr->EntityID = entityID;
+		s_Data.LineVertexBufferptr++;
+
+		s_Data.LineVertexBufferptr->Position = p2;
+		s_Data.LineVertexBufferptr->Color = color;
+		s_Data.LineVertexBufferptr->EntityID = entityID;
+		s_Data.LineVertexBufferptr++;
+
+		s_Data.LineVertexCount += 2;
+	}
+
+	void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int entityID)
+	{
+		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p1 = glm::vec3(position.x + size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p2 = glm::vec3(position.x + size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		glm::vec3 p3 = glm::vec3(position.x - size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+
+		DrawLine(p0, p1, color);
+		DrawLine(p1, p2, color);
+		DrawLine(p2, p3, color);
+		DrawLine(p3, p0, color);
+	}
+
+	void Renderer2D::DrawRect(const glm::mat4& transform, const glm::vec4& color, int entityID)
+	{
+		glm::vec3 lineVertices[4];
+		for (size_t i = 0; i < 4; i++)
+			lineVertices[i] = transform *  s_Data.QuadVertexPosition[i];
+
+		DrawLine(lineVertices[0], lineVertices[1], color);
+		DrawLine(lineVertices[1], lineVertices[2], color);
+		DrawLine(lineVertices[2], lineVertices[3], color);
+		DrawLine(lineVertices[3], lineVertices[0], color);
+	}
+
+	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
+	{
+		if (src.Texture)
+			DrawQuad(transform, src.Texture, src.TilingFactor, src.Color, entityID);
 		else
-			DrawQuad(transform, src.Color,entityID);
+			DrawQuad(transform, src.Color, entityID);
+	}
+
+	float Renderer2D::GetLineWidth()
+	{
+		return s_Data.LineWidth;
+	}
+
+	void Renderer2D::SetLineWidth(float width)
+	{
+		s_Data.LineWidth = width;
 	}
 
 	void Renderer2D::ResetStats()

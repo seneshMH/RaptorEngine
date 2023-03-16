@@ -16,12 +16,12 @@ namespace Raptor {
 	{
 		switch (bodyType)
 		{
-			case Rigidbody2DComponent::BodyType::Static: return b2_staticBody;
-			case Rigidbody2DComponent::BodyType::Dyanamic: return b2_dynamicBody;
-			case Rigidbody2DComponent::BodyType::Kinematic: return b2_dynamicBody;
+		case Rigidbody2DComponent::BodyType::Static: return b2_staticBody;
+		case Rigidbody2DComponent::BodyType::Dyanamic: return b2_dynamicBody;
+		case Rigidbody2DComponent::BodyType::Kinematic: return b2_dynamicBody;
 		}
 
-		RT_CORE_ASSERT(false,"Unknown body type");
+		RT_CORE_ASSERT(false, "Unknown body type");
 		return b2_staticBody;
 	}
 
@@ -36,7 +36,7 @@ namespace Raptor {
 	}
 
 	template<typename Component>
-	static void CopyComponent(entt::registry& dst, entt::registry& src,const std::unordered_map<UUID, entt::entity>& enttMap)
+	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
 	{
 		auto view = src.view<Component>();
 		for (auto e : view)
@@ -46,12 +46,12 @@ namespace Raptor {
 			entt::entity dstEnttId = enttMap.at(uuid);
 
 			auto& component = src.get<Component>(e);
-			dst.emplace_or_replace<Component>(dstEnttId,component);
+			dst.emplace_or_replace<Component>(dstEnttId, component);
 		}
 	}
 
 	template<typename Component>
-	static void CopyComponentIfExists(Entity dst,Entity src)
+	static void CopyComponentIfExists(Entity dst, Entity src)
 	{
 		if (src.HasComponent<Component>())
 			dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
@@ -74,17 +74,17 @@ namespace Raptor {
 			UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
 			const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
 			Entity newEntity = newScene->CreateEntityWithUUID(uuid, name);
-			
+
 			enttMap[uuid] = (entt::entity)newEntity;
 		}
 
-		CopyComponent<TransformComponent>(destSceneRegistry, srcSceneRegistry,enttMap);
-		CopyComponent<SpriteRendererComponent>(destSceneRegistry, srcSceneRegistry,enttMap);
-		CopyComponent<CircleRendererComponent>(destSceneRegistry, srcSceneRegistry,enttMap);
-		CopyComponent<CameraComponent>(destSceneRegistry, srcSceneRegistry,enttMap);
-		CopyComponent<NativScriptComponent>(destSceneRegistry, srcSceneRegistry,enttMap);
-		CopyComponent<Rigidbody2DComponent>(destSceneRegistry, srcSceneRegistry,enttMap);
-		CopyComponent<BoxCollider2DComponent>(destSceneRegistry, srcSceneRegistry,enttMap);
+		CopyComponent<TransformComponent>(destSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<SpriteRendererComponent>(destSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CircleRendererComponent>(destSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CameraComponent>(destSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<NativScriptComponent>(destSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<Rigidbody2DComponent>(destSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<BoxCollider2DComponent>(destSceneRegistry, srcSceneRegistry, enttMap);
 
 
 		return newScene;
@@ -114,15 +114,15 @@ namespace Raptor {
 
 	void Scene::OnRuntimeStart()
 	{
-		m_PhysicsWorld = new b2World({0.0f,-9.8f});
-		
+		m_PhysicsWorld = new b2World({ 0.0f,-9.8f });
+
 		auto view = m_Registry.view<Rigidbody2DComponent>();
 		for (auto e : view)
 		{
 			Entity entity = { e,this };
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
-			
+
 			b2BodyDef bodyDef;
 			bodyDef.type = Rigidbody2DTypeToBox2DType(rb2d.Type);
 			bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
@@ -198,10 +198,10 @@ namespace Raptor {
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
 		{
-			auto view = m_Registry.view<TransformComponent,CameraComponent>();
+			auto view = m_Registry.view<TransformComponent, CameraComponent>();
 			for (auto entity : view)
 			{
-				auto [transform,camera] = view.get<TransformComponent, CameraComponent>(entity);
+				auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
 
 				if (camera.Primary)
 				{
@@ -256,12 +256,12 @@ namespace Raptor {
 		}
 
 		{
-			auto view = m_Registry.view<TransformComponent,CircleRendererComponent>();
+			auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto& entity : view)
 			{
 				auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
 
-				Renderer2D::DrawCircle(transform.GetTransform(), circle.Color,circle.Thickness,circle.Fade, (int)entity);
+				Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
 			}
 		}
 
@@ -289,7 +289,7 @@ namespace Raptor {
 		std::string name = entity.GetName();
 		Entity newEntity = CreateEntity(name);
 
-		CopyComponentIfExists<TransformComponent>(newEntity,entity);
+		CopyComponentIfExists<TransformComponent>(newEntity, entity);
 		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<CircleRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);

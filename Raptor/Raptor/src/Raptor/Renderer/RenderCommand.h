@@ -27,9 +27,19 @@ namespace Raptor {
 
 	public:
 
-		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t count = 0)
+		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount = 0)
 		{
-			s_RendererAPI->DrawIndexed(vertexArray,count);
+			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
+		}
+
+		inline static void DrawLines(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertexCount = 0)
+		{
+			s_RendererAPI->DrawLines(vertexArray, vertexCount);
+		}
+
+		inline static void SetLineWidth(float width)
+		{
+			s_RendererAPI->SetLineWidth(width);
 		}
 
 	private:
