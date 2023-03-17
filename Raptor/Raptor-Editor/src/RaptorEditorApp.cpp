@@ -13,16 +13,20 @@ namespace Raptor {
 	class RaptorEditor : public Application
 	{
 	public:
-		RaptorEditor()
-			:Application("Raptor Editor")
+		RaptorEditor(const ApplicationSpecification& spec)
+			:Application(spec)
 		{
 			PushLayer(new EditorLayer());
 		}
 		~RaptorEditor() {}
 	};
 
-	Raptor::Application* Raptor::CreateApplication()
+	Raptor::Application* Raptor::CreateApplication(ApplicationCommandLineArgs args)
 	{
-		return new RaptorEditor();
+		ApplicationSpecification spec;
+		spec.Name = "RaptorEditor";
+		spec.CommandLineArgs = args;
+
+		return new RaptorEditor(spec);
 	}
 }

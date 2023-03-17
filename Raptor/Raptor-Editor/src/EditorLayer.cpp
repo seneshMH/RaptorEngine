@@ -85,6 +85,14 @@ namespace Raptor {
 
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 #endif
+		auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
+		if (commandLineArgs.Count > 1)
+		{
+			auto sceneFilePath = commandLineArgs[1];
+			SceneSrializer serializer(m_ActiveScene);
+			serializer.DeSerialize(sceneFilePath);
+		}
+		
 		Renderer2D::SetLineWidth(4.0f);
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);

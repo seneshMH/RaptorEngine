@@ -12,7 +12,8 @@ extern "C" {
 class SandBox : public Raptor::Application
 {
 public:
-	SandBox()
+	SandBox(const Raptor::ApplicationSpecification& specification)
+		: Raptor::Application(specification)
 	{
 		//PushLayer(new ExampleLayer());
 		PushLayer(new Sandbox2D());
@@ -20,7 +21,12 @@ public:
 	~SandBox(){}
 };
 
-Raptor::Application* Raptor::CreateApplication()
+Raptor::Application* Raptor::CreateApplication(Raptor::ApplicationCommandLineArgs args)
 {
-	return new SandBox();
+	Raptor::ApplicationSpecification spec;
+	spec.Name = "Sandbox";
+	spec.WorkingDirectory = "../Raptor-Editor";
+	spec.CommandLineArgs = args;
+
+	return new Sandbox(spec);
 }
