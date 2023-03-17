@@ -26,6 +26,7 @@ namespace Raptor {
 		m_CheckerBordTexture = Texture2D::Create("assets/images/checker.png");
 		m_IconPlay = Texture2D::Create("resources/icons/PlayButton.png");
 		m_IconStop = Texture2D::Create("resources/icons/StopButton.png");
+		m_IconSimiulate = Texture2D::Create("resources/icons/SimulateButton.png");
 
 		FrameBufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8 , FramebufferTextureFormat::RED_INTEGER ,FramebufferTextureFormat::Depth };
@@ -33,7 +34,8 @@ namespace Raptor {
 		fbSpec.Height = 720;
 		m_FrameBuffer = FrameBuffer::Create(fbSpec);
 
-		m_ActiveScene = CreateRef<Scene>();
+		m_EditorScene = CreateRef<Scene>();
+		m_ActiveScene = m_EditorScene;
 
 		m_EditorCamera = EditorCamera(30.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
 #if 0
@@ -81,7 +83,7 @@ namespace Raptor {
 			}
 		};
 
-		m_CameraEntity.AddComponent<NativScriptComponent>().Bind<CameraController>();
+		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 #endif
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
@@ -125,6 +127,12 @@ namespace Raptor {
 
 			m_EditorCamera.OnUpdate(ts);
 			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+			break;
+		}
+		case SceneState::Simulate:
+		{
+			m_EditorCamera.OnUpdate(ts);
+			m_ActiveScene->OnUpdateSimiulation(ts, m_EditorCamera);
 			break;
 		}
 		case SceneState::Play:
@@ -370,7 +378,7 @@ namespace Raptor {
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
 	{
-		if (e.GetRepeatCount() > 0)
+		if (e.IsRepeat())
 			return false;
 
 		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
@@ -460,6 +468,9 @@ namespace Raptor {
 		if (m_SceneState == SceneState::Play)
 		{
 			Entity camera = m_ActiveScene->GetPrimaryCameraEntity();
+			if (!camera)
+				return;
+
 			Renderer2D::BeginScene(camera.GetComponent<CameraComponent>().Camera, camera.GetComponent<TransformComponent>().GetTransform());
 		}
 		else
@@ -602,15 +613,36 @@ namespace Raptor {
 
 		float size = ImGui::GetWindowHeight() - 4.0f;
 
-		Ref<Texture2D> icon = m_SceneState == SceneState::Edit ? m_IconPlay : m_IconStop;
-		ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
-		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0))
+		bool toolbarEnabled = (bool)m_ActiveScene;
+		ImVec4 tintColor = ImVec4(1, 1, 1, 1);
+		if (!toolbarEnabled)
+			tintColor.x = 0.5f;
 		{
-			if (m_SceneState == SceneState::Edit)
-				OnScenePlay();
-			else if (m_SceneState == SceneState::Play)
-				OnSceneStop();
+			Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
+			ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
+			if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0,ImVec4(0,0,0,0),tintColor) && toolbarEnabled)
+			{
+				if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate)
+					OnScenePlay();
+				else if (m_SceneState == SceneState::Play)
+					OnSceneStop();
+			}
 		}
+
+		ImGui::SameLine();
+
+		{
+			Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play) ? m_IconSimiulate : m_IconStop;
+			//ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
+			if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0 ,ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+			{
+				if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play)
+					OnSceneSimulate();
+				else if (m_SceneState == SceneState::Simulate)
+					OnSceneStop();
+			}
+		}
+
 		ImGui::PopStyleVar(2);
 		ImGui::PopStyleColor(3);
 		ImGui::End();
@@ -618,6 +650,9 @@ namespace Raptor {
 
 	void EditorLayer::OnScenePlay()
 	{
+		if (m_SceneState == SceneState::Simulate)
+			OnSceneStop();
+
 		m_SceneState = SceneState::Play;
 		m_ActiveScene = Scene::Copy(m_EditorScene);
 		m_ActiveScene->OnRuntimeStart();
@@ -627,12 +662,31 @@ namespace Raptor {
 
 	void EditorLayer::OnSceneStop()
 	{
+		RT_CORE_ASSERT(m_SceneState == SceneState::Simulate || m_SceneState == SceneState::Play)
+
+			if (m_SceneState == SceneState::Play)
+				m_ActiveScene->OnRuntimeStop();
+			else if (m_SceneState == SceneState::Simulate)
+				m_ActiveScene->OnSimiulationStop();
+
 		m_SceneState = SceneState::Edit;
-		m_ActiveScene->OnRuntimeStop();
 		m_ActiveScene = m_EditorScene;
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
+
+	void EditorLayer::OnSceneSimulate()
+	{
+		if (m_SceneState == SceneState::Play)
+			OnSceneStop();
+
+		m_SceneState = SceneState::Simulate;
+		m_ActiveScene = Scene::Copy(m_EditorScene);
+		m_ActiveScene->OnSimiulationStart();
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
 
 	void EditorLayer::OnDuplicateEntity()
 	{

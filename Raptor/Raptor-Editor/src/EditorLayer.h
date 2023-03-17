@@ -37,6 +37,8 @@ namespace Raptor {
 		void OnScenePlay();
 		void OnSceneStop();
 
+		void OnSceneSimulate();
+		
 		void OnDuplicateEntity();
 
 		void UI_ToolBar();
@@ -78,10 +80,11 @@ namespace Raptor {
 
 		Ref<Texture2D> m_IconPlay;
 		Ref<Texture2D>	m_IconStop;
+		Ref<Texture2D>	m_IconSimiulate;
 
 		enum class SceneState
 		{
-			Edit = 0, Play = 1
+			Edit = 0, Play = 1, Simulate = 2
 		};
 
 		SceneState m_SceneState = SceneState::Edit;
