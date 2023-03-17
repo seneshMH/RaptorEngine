@@ -370,7 +370,10 @@ namespace Raptor {
 	void EditorLayer::OnEvent(Event& e)
 	{
 		m_CameraController.OnEvevnt(e);
-		m_EditorCamera.OnEvent(e);
+		if (m_SceneState == SceneState::Edit)
+		{
+			m_EditorCamera.OnEvent(e);
+		}
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(RT_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(RT_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
