@@ -82,18 +82,18 @@ namespace Raptor {
 	};
 
 	class ScriptableEntity;
-	struct NativScriptComponent
+	struct NativeScriptComponent
 	{
 		ScriptableEntity* Instance = nullptr;
 
 		ScriptableEntity* (*InstantiateScript)();
-		void( *DestroyScript)(NativScriptComponent*);
+		void( *DestroyScript)(NativeScriptComponent*);
 
 		template<typename T>
 		void Bind()
 		{
 			InstantiateScript = []() {return static_cast<ScriptableEntity*>( new T()); };
-			DestroyScript = [](NativScriptComponent* nsc) {delete nsc->Instance; nsc->Instance = nullptr; };
+			DestroyScript = [](NativeScriptComponent* nsc) {delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};
 
@@ -144,4 +144,15 @@ namespace Raptor {
 		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
 
 	};
+
+	template<typename... Component>
+	struct ComponentGroup
+	{
+	};
+
+	using AllComponents =
+		ComponentGroup<TransformComponent, SpriteRendererComponent,
+		CircleRendererComponent, CameraComponent, NativeScriptComponent,
+		Rigidbody2DComponent, BoxCollider2DComponent, CircleCollider2DComponent>;
+
 }
