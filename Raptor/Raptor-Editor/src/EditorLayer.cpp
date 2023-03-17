@@ -26,19 +26,19 @@ namespace Raptor {
 		m_CheckerBordTexture = Texture2D::Create("assets/images/checker.png");
 		m_IconPlay = Texture2D::Create("resources/icons/PlayButton.png");
 		m_IconStop = Texture2D::Create("resources/icons/StopButton.png");
-		
+
 		FrameBufferSpecification fbSpec;
-		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8 , FramebufferTextureFormat::RED_INTEGER ,FramebufferTextureFormat::Depth};
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8 , FramebufferTextureFormat::RED_INTEGER ,FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_FrameBuffer = FrameBuffer::Create(fbSpec);
 
 		m_ActiveScene = CreateRef<Scene>();
 
-		m_EditorCamera = EditorCamera(30.0f,16.0f/9.0f,0.1f,1000.0f);
+		m_EditorCamera = EditorCamera(30.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
 #if 0
-		auto Square =  m_ActiveScene->CreateEntity("Green Square");
-		Square.AddComponent<SpriteRendererComponent>( glm::vec4{ 0.0f,1.0f,0.0f,1.0f });
+		auto Square = m_ActiveScene->CreateEntity("Green Square");
+		Square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f,1.0f,0.0f,1.0f });
 
 		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
 		redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f,0.0f,0.0f,1.0f });
@@ -50,7 +50,7 @@ namespace Raptor {
 		m_CameraEntity.AddComponent<CameraComponent>();
 
 		m_SecondCamera = m_ActiveScene->CreateEntity("Camera B");
-		auto& cc =  m_SecondCamera.AddComponent<CameraComponent>();
+		auto& cc = m_SecondCamera.AddComponent<CameraComponent>();
 		cc.Primary = false;
 
 		class CameraController : public ScriptableEntity
@@ -85,7 +85,7 @@ namespace Raptor {
 #endif
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
-		
+
 	}
 
 	void EditorLayer::OnDetach()
@@ -118,23 +118,23 @@ namespace Raptor {
 
 		switch (m_SceneState)
 		{
-			case SceneState::Edit:
-			{
-				if (m_ViewportFocused)
-					m_CameraController.OnUpdate(ts);
-				
-				m_EditorCamera.OnUpdate(ts);
-				m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
-				break;
-			}
-			case SceneState::Play:
-			{
-				m_ActiveScene->OnUpdateRunTime(ts);
-				break;
-			}
+		case SceneState::Edit:
+		{
+			if (m_ViewportFocused)
+				m_CameraController.OnUpdate(ts);
+
+			m_EditorCamera.OnUpdate(ts);
+			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+			break;
+		}
+		case SceneState::Play:
+		{
+			m_ActiveScene->OnUpdateRunTime(ts);
+			break;
+		}
 		}
 
-		
+
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_ViewportBounds[0].x;
 		my -= m_ViewportBounds[0].y;
@@ -147,11 +147,13 @@ namespace Raptor {
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
 			int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
-			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData , m_ActiveScene.get());
-			
+			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
+
 		}
 
-		
+		OnOverlayRender();
+
+
 		m_FrameBuffer->UnBind();
 	}
 
@@ -160,7 +162,7 @@ namespace Raptor {
 		RT_PROFILE_FUNCTION();
 
 		static bool dockingEnabled = true;
-		
+
 		static bool dockSpaceOpen = true;
 		static bool opt_fullscreen = true;
 		static bool opt_padding = false;
@@ -228,7 +230,7 @@ namespace Raptor {
 					NewScene();
 				}
 
-				if (ImGui::MenuItem("Open...","Ctrl+O"))
+				if (ImGui::MenuItem("Open...", "Ctrl+O"))
 				{
 					OpenScene();
 				}
@@ -265,8 +267,12 @@ namespace Raptor {
 
 		ImGui::End();
 
+		ImGui::Begin("Settings");
+		ImGui::Checkbox("Show Physics Colliders", &m_ShowPhysicsColliders);
+		ImGui::End();
+
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		
+
 		//Viewport
 		ImGui::Begin("viewport");
 		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
@@ -277,11 +283,11 @@ namespace Raptor {
 
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
-		
+
 		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
-		
+
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		
+
 		m_viewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
 		uint64_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
@@ -292,7 +298,7 @@ namespace Raptor {
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				const wchar_t* path = (const wchar_t*)payload->Data;
-				OpenScene(std::filesystem::path(s_AssetPath)/path);
+				OpenScene(std::filesystem::path(s_AssetPath) / path);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -305,7 +311,7 @@ namespace Raptor {
 			ImGuizmo::SetDrawlist();
 
 			ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
-			
+
 			//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
 			//const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
 			//const glm::mat4& cameraProjection = camera.GetProjection();
@@ -318,7 +324,7 @@ namespace Raptor {
 
 			auto& tc = selectedEntity.GetComponent<TransformComponent>();
 			glm::mat4 transform = tc.GetTransform();
-			
+
 			//Snaping
 			bool snap = Input::IsKeyPressed(Key::LeftControl);
 			float snapValue = 0.5f;
@@ -328,14 +334,14 @@ namespace Raptor {
 			float snapValues[3] = { snapValue,snapValue ,snapValue };
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-				(ImGuizmo::OPERATION) m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),nullptr,
+				(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr,
 				snap ? snapValues : nullptr);
 
 			if (ImGuizmo::IsUsing())
 			{
 				glm::vec3 translation, rotation, scale;
-				Math::DecomposeTransform(transform,translation, rotation, scale);
-				
+				Math::DecomposeTransform(transform, translation, rotation, scale);
+
 				glm::vec3 deltaRotation = rotation - tc.Rotation;
 
 				tc.Translation = translation;
@@ -350,7 +356,7 @@ namespace Raptor {
 		UI_ToolBar();
 
 		ImGui::End();
-		
+
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -369,73 +375,73 @@ namespace Raptor {
 
 		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
-		
+
 		switch (e.GetKeyCode())
 		{
-			case Key::N:
+		case Key::N:
+		{
+			if (control)
 			{
-				if (control)
-				{
-					NewScene();
-				}
-				break;
+				NewScene();
 			}
-			case Key::O:
+			break;
+		}
+		case Key::O:
+		{
+			if (control)
 			{
-				if (control)
-				{
-					OpenScene();
-				}
-				break;
+				OpenScene();
 			}
+			break;
+		}
 
-			case Key::S:
+		case Key::S:
+		{
+			if (control)
 			{
-				if (control)
-				{
-					if (shift)
-						SaveSceneAs();
-					else
-						SaveScene();
-				}
-				break;
+				if (shift)
+					SaveSceneAs();
+				else
+					SaveScene();
 			}
+			break;
+		}
 
-			//Commands
+		//Commands
 
-			case Key::D:
+		case Key::D:
+		{
+			if (control)
 			{
-				if (control)
-				{
-					OnDuplicateEntity();
-				}
-				break;
+				OnDuplicateEntity();
 			}
+			break;
+		}
 
-			//Gizmos
-			case Key::Q:
-			{
-				m_GizmoType = -1;
-				break;
-			}
-			case Key::W:
-			{
-				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-				break;
-			}
-			case Key::E:
-			{
-				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-				break;
-			}
-			case Key::R:
-			{
-				m_GizmoType = ImGuizmo::OPERATION::SCALE;
-				break;
-			}
+		//Gizmos
+		case Key::Q:
+		{
+			m_GizmoType = -1;
+			break;
+		}
+		case Key::W:
+		{
+			m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		}
+		case Key::E:
+		{
+			m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+			break;
+		}
+		case Key::R:
+		{
+			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			break;
+		}
 
-			default:
-				break;
+		default:
+			break;
 		}
 	}
 
@@ -443,10 +449,67 @@ namespace Raptor {
 	{
 		if (e.GetMouseButton() == Mouse::ButtonLeft)
 		{
-			if(m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+			if (m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
 				m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
 		}
 		return false;
+	}
+
+	void EditorLayer::OnOverlayRender()
+	{
+		if (m_SceneState == SceneState::Play)
+		{
+			Entity camera = m_ActiveScene->GetPrimaryCameraEntity();
+			Renderer2D::BeginScene(camera.GetComponent<CameraComponent>().Camera, camera.GetComponent<TransformComponent>().GetTransform());
+		}
+		else
+		{
+			Renderer2D::BeginScene(m_EditorCamera);
+		}
+
+		if (m_ShowPhysicsColliders)
+		{
+			//BOX COLLIDERS
+			{
+				auto view = m_ActiveScene->GetAllEntitesWidth<TransformComponent, BoxCollider2DComponent>();
+
+				for (auto entity : view)
+				{
+					auto [tc, bc2d] = view.get<TransformComponent, BoxCollider2DComponent>(entity);
+
+					glm::vec3 translation = tc.Translation + glm::vec3(bc2d.Offset, 0.001f);
+					glm::vec3 scale = tc.Scale * glm::vec3(bc2d.Size * 2.0f, 1.0f);
+
+					glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
+						* glm::rotate(glm::mat4(1.0f), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
+						* glm::scale(glm::mat4(1.0f), scale);
+
+					Renderer2D::DrawRect(transform, glm::vec4(0, 1, 0, 1));
+				}
+			}
+
+			//CIRCLE COLLIDERS
+			{
+				auto view = m_ActiveScene->GetAllEntitesWidth<TransformComponent, CircleCollider2DComponent>();
+
+				for (auto entity : view)
+				{
+					auto [tc, cc2d] = view.get<TransformComponent, CircleCollider2DComponent>(entity);
+
+					glm::vec3 translation = tc.Translation + glm::vec3(cc2d.Offset, 0.01f);
+					glm::vec3 scale = tc.Scale * glm::vec3(cc2d.Radius * 2.0f);
+
+					glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
+						* glm::scale(glm::mat4(1.0f), scale);
+
+					Renderer2D::DrawCircle(transform, glm::vec4(0, 1, 0, 1), 0.05f);
+				}
+			}
+
+		}
+
+
+		Renderer2D::EndScene();
 	}
 
 	void EditorLayer::NewScene()
@@ -472,7 +535,7 @@ namespace Raptor {
 	{
 		if (m_SceneState != SceneState::Edit)
 			OnSceneStop();
-		
+
 		if (path.extension().string() != ".raptor")
 		{
 			RT_WARN("Could not load {0} as scene file", path.filename().string());
@@ -526,26 +589,26 @@ namespace Raptor {
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
-		
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+
 		auto& colors = ImGui::GetStyle().Colors;
 		const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];
 		const auto& buttonActive = colors[ImGuiCol_ButtonActive];
 
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x, buttonHovered.y, buttonHovered.z,0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x, buttonHovered.y, buttonHovered.z, 0.5f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
 
 		ImGui::Begin("##toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-		
+
 		float size = ImGui::GetWindowHeight() - 4.0f;
 
 		Ref<Texture2D> icon = m_SceneState == SceneState::Edit ? m_IconPlay : m_IconStop;
 		ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
-		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(),ImVec2(size, size),ImVec2(0,0),ImVec2(1,1),0))
+		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0))
 		{
-			if(m_SceneState == SceneState::Edit)
+			if (m_SceneState == SceneState::Edit)
 				OnScenePlay();
-			else if(m_SceneState == SceneState::Play)
+			else if (m_SceneState == SceneState::Play)
 				OnSceneStop();
 		}
 		ImGui::PopStyleVar(2);
