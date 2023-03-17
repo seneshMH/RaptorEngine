@@ -253,6 +253,11 @@ namespace Raptor {
 					OpenScene();
 				}
 
+				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				{
+					SaveScene();
+				}
+
 				if (ImGui::MenuItem("Save AS...", "Ctrl+Shift+S"))
 				{
 					SaveSceneAs();
