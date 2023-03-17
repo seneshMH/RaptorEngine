@@ -8,10 +8,29 @@
 #include "Raptor/ImGui/ImGuiLayer.h"
 
 namespace Raptor {
+
+	struct ApplicationCommandLineArgs
+	{
+		int Count = 0;
+		char** Args = nullptr;
+		const char* operator[](int index) const
+		{
+			RT_CORE_ASSERT(index < Count);
+			return Args[index];
+		}
+	};
+
+	struct ApplicationSpecification
+	{
+		std::string Name = "Raptor Application";
+		std::string WorkingDirectory;
+		ApplicationCommandLineArgs CommandLineArgs;
+	};
+
 	class Application
 	{
 	public:
-		Application(const std::string& name = "Raptor");
+		Application(const ApplicationSpecification& specification);
 		virtual ~Application();
 
 		void Run();
@@ -28,11 +47,14 @@ namespace Raptor {
 
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
+		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 	private:
 
+		ApplicationSpecification m_Specification;
 		Scope<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
@@ -44,6 +66,6 @@ namespace Raptor {
 		static Application* s_Instance;
 	};
 
-	Application* CreateApplication();
+	Application* CreateApplication(ApplicationCommandLineArgs args);
 }
 

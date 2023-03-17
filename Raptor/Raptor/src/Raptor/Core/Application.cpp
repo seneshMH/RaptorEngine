@@ -5,7 +5,7 @@
 #include "Raptor/Renderer/Renderer.h"
 #include "Raptor/Core/Timestep.h"
 
-#include <GLFW/glfw3.h>
+#include "Raptor/utils/PlatformUtils.h"
 
 namespace Raptor {
 
@@ -13,14 +13,19 @@ namespace Raptor {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(const std::string& name)
+	Application::Application(const ApplicationSpecification& specification) :
+		m_Specification(specification)
 	{
 		RT_PROFILE_FUNCTION();
 
 		RT_CORE_ASSERT(!s_Instance, "Application already exists");
 		s_Instance = this;
 
-		m_Window = Window::Create(WindowProps(name));
+		if (!m_Specification.WorkingDirectory.empty())
+			std::filesystem::current_path(m_Specification.WorkingDirectory);
+
+		m_Window = Window::Create(WindowProps(m_Specification.Name));
+		
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 	
 		Renderer::Init();
@@ -44,7 +49,7 @@ namespace Raptor {
 		{
 			RT_PROFILE_SCOPE("Run Loop");
 
-			float time = (float)glfwGetTime();
+			float time = Time::GetTime();
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 

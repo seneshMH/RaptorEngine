@@ -24,6 +24,8 @@ namespace Raptor {
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
+		void OnOverlayRender();
+
 		void NewScene();
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
@@ -35,6 +37,8 @@ namespace Raptor {
 		void OnScenePlay();
 		void OnSceneStop();
 
+		void OnSceneSimulate();
+		
 		void OnDuplicateEntity();
 
 		void UI_ToolBar();
@@ -69,15 +73,18 @@ namespace Raptor {
 
 		int m_GizmoType = -1;
 
+		bool m_ShowPhysicsColliders = false;
+
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		ContentBrowserPanel m_ContentBrowserPanel;
 
 		Ref<Texture2D> m_IconPlay;
 		Ref<Texture2D>	m_IconStop;
+		Ref<Texture2D>	m_IconSimiulate;
 
 		enum class SceneState
 		{
-			Edit = 0, Play = 1
+			Edit = 0, Play = 1, Simulate = 2
 		};
 
 		SceneState m_SceneState = SceneState::Edit;

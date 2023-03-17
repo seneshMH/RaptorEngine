@@ -20,6 +20,7 @@ Entities:
       Scale: [5.44522524, 0.25037092, 1]
     SpriteRendererComponent:
       Color: [0.427513063, 1, 0.409266412, 1]
+      TilingFactor: 1
     Rigidbody2DComponent:
       BodyType: Static
       FixedRotation: false
@@ -39,6 +40,7 @@ Entities:
       Scale: [0.44426322, 0.450000882, 0.450000137]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
+      TilingFactor: 1
     Rigidbody2DComponent:
       BodyType: Dyanamic
       FixedRotation: false
@@ -58,6 +60,7 @@ Entities:
       Scale: [0.44426322, 0.450000882, 0.450000137]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
+      TilingFactor: 1
     Rigidbody2DComponent:
       BodyType: Dyanamic
       FixedRotation: false
@@ -77,6 +80,7 @@ Entities:
       Scale: [0.44426322, 0.450000882, 0.450000137]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
+      TilingFactor: 1
     Rigidbody2DComponent:
       BodyType: Dyanamic
       FixedRotation: false
@@ -109,11 +113,13 @@ Entities:
     TagComponent:
       Tag: Box
     TransformComponent:
-      Translation: [0.0368053243, 1.64701533, -0.303934366]
+      Translation: [0.021538483, 1.22952485, -0.352837443]
       Rotation: [-0.121814728, -0.295028239, 3.14062166]
       Scale: [0.44426322, 0.450000882, 0.450000137]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
+      TexturePath: assets\images\checker.png
+      TilingFactor: 2
     Rigidbody2DComponent:
       BodyType: Dyanamic
       FixedRotation: false
@@ -133,6 +139,7 @@ Entities:
       Scale: [5.44522619, 0.250371069, 1]
     SpriteRendererComponent:
       Color: [0.427513063, 1, 0.409266412, 1]
+      TilingFactor: 1
     Rigidbody2DComponent:
       BodyType: Static
       FixedRotation: false
@@ -152,6 +159,7 @@ Entities:
       Scale: [5.44522524, 0.25037083, 1]
     SpriteRendererComponent:
       Color: [0.427513063, 1, 0.409266412, 1]
+      TilingFactor: 1
     Rigidbody2DComponent:
       BodyType: Static
       FixedRotation: false
