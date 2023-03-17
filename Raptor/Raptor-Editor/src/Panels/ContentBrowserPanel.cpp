@@ -39,8 +39,8 @@ namespace Raptor {
 		{
 			const auto& path = directoryEntry.path();
 
-			auto relativePath =  std::filesystem::relative(path, s_AssetPath);
-			std::string filenameString = relativePath.filename().string();
+			std::string filenameString = path.filename().string();
+			
 			ImGui::PushID(filenameString.c_str());
 
 			Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
@@ -50,6 +50,8 @@ namespace Raptor {
 
 			if (ImGui::BeginDragDropSource())
 			{
+				auto relativePath = std::filesystem::relative(path, s_AssetPath);
+
 				const wchar_t* itemPath = relativePath.c_str();
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath,(wcslen(itemPath) + 1) * sizeof(wchar_t),ImGuiCond_Once);
 				ImGui::EndDragDropSource();
