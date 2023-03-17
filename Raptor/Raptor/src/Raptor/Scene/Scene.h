@@ -17,14 +17,17 @@ namespace Raptor {
 		static Ref<Scene> Copy(Ref<Scene> other);
 
 		Entity CreateEntity(const std::string& name = std::string());
-		Entity CreateEntityWithUUID(UUID uuid,const std::string& name = std::string());
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
 
 		void OnRuntimeStart();
+		void OnSimiulationStart();
 		void OnRuntimeStop();
+		void OnSimiulationStop();
 
 		void OnUpdateRunTime(Timestep ts);
-		void OnUpdateEditor(Timestep ts,EditorCamera& camera);
+		void OnUpdateSimiulation(Timestep ts, EditorCamera& camera);
+		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		void DuplicateEntity(Entity entity);
@@ -40,6 +43,10 @@ namespace Raptor {
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
+		void OnPhysics2DStart();
+		void OnPhysics2DStop();
+
+		void RenderScene(EditorCamera& camera);
 	private:
 		entt::registry m_Registry;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
