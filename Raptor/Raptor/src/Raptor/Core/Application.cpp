@@ -4,8 +4,8 @@
 
 #include "Raptor/Renderer/Renderer.h"
 #include "Raptor/Core/Timestep.h"
-
 #include "Raptor/utils/PlatformUtils.h"
+#include "Raptor/Scripting/ScriptEngine.h"
 
 namespace Raptor {
 
@@ -29,6 +29,7 @@ namespace Raptor {
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 	
 		Renderer::Init();
+		ScriptEngine::Init();
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
@@ -38,6 +39,7 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
+		ScriptEngine::Shutdown();
 		Renderer::Shutdown();
 	}
 

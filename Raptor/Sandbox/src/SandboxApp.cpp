@@ -28,5 +28,5 @@ Raptor::Application* Raptor::CreateApplication(Raptor::ApplicationCommandLineArg
 	spec.WorkingDirectory = "../Raptor-Editor";
 	spec.CommandLineArgs = args;
 
-	return new Sandbox(spec);
+	return new SandBox(spec);
 }
