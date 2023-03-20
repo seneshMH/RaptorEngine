@@ -2,6 +2,7 @@
 .vs
 bin
 bin-int
+intermediate
 
 **.sln
 **.vcxproj
@@ -9,3 +10,5 @@ bin-int
 **.vcxproj.user
 **.json
 **.log
+**.csproj
+**.cache
