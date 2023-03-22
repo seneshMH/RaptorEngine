@@ -1,6 +1,10 @@
 #include "rtpch.h"
 #include "ScriptEngine.h"
 
+#include "Raptor/Scene/Scene.h"
+#include "Raptor/Scene/Entity.h"
+#include "Raptor/Core/Timestep.h"
+
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
 #include "mono/metadata/object.h"
@@ -95,6 +99,11 @@ namespace Raptor {
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
 		ScriptClass EntityClass;
+
+		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
+		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
+
+		Scene* SceneContext = nullptr;
 	};
 
 
@@ -106,8 +115,13 @@ namespace Raptor {
 
 		InitMono();
 		LoadAssembly("resources/scripts/Raptor-ScriptCore.dll");
-		ScriptGiue::RegisterFunctions();
+		LoadAssemblyClasses(s_Data->CoreAssembly);
+		ScriptGlue::RegisterComponents();
+		ScriptGlue::RegisterFunctions();
 
+		s_Data->EntityClass = ScriptClass("Raptor", "Entity");
+
+#if 0
 		s_Data->EntityClass = ScriptClass("Raptor", "Entity");
 
 		MonoObject* instance = s_Data->EntityClass.Instantiate();
@@ -134,7 +148,7 @@ namespace Raptor {
 		void* stringParam = monoString;
 		MonoMethod* printCustomMesageFunc = s_Data->EntityClass.GetMethod( "PrintCustomMessage", 1);
 		s_Data->EntityClass.InvokeMethod(instance,printCustomMesageFunc, &stringParam);
-
+#endif // 0
 	}
 
 	void ScriptEngine::Shutdown()
@@ -161,6 +175,11 @@ namespace Raptor {
 		s_Data->RootDomain = nullptr;
 	}
 
+	bool ScriptEngine::EntityClassExists(const std::string& fullClassName)
+	{
+		return s_Data->EntityClasses.find(fullClassName) != s_Data->EntityClasses.end();
+	}
+
 	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
 	{
 		s_Data->AppDomain = mono_domain_create_appdomain("RaptorScriptRuntime", nullptr);
@@ -172,12 +191,104 @@ namespace Raptor {
 		//Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 	}
 
+	void ScriptEngine::OnRuntimeStart(Scene* scene)
+	{
+		s_Data->SceneContext = scene;
+	}
+
+	void ScriptEngine::OnRuntimeStop()
+	{
+		s_Data->SceneContext = nullptr;
+		s_Data->EntityInstances.clear();
+	}
+
+	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
+	{
+		return s_Data->EntityClasses;
+	}
+
+	void ScriptEngine::LoadAssemblyClasses(MonoAssembly* assembly)
+	{
+		s_Data->EntityClasses.clear();
+
+		MonoImage* image = mono_assembly_get_image(assembly);
+		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+		int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
+
+		MonoClass* entityClass = mono_class_from_name(image, "Raptor", "Entity");
+
+		for (int32_t i = 0; i < numTypes; i++)
+		{
+			uint32_t cols[MONO_TYPEDEF_SIZE];
+			mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
+
+			const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
+			const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+
+			std::string fullName;
+			if (strlen(nameSpace) != 0)
+			{
+				fullName = fmt::format("{}.{}",nameSpace,name);
+			}
+			else
+			{
+				fullName = name;
+			}
+
+			MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);
+			
+			if (monoClass == entityClass)
+				continue;
+			
+			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
+
+			if (isEntity)
+			{
+				s_Data->EntityClasses[fullName] = CreateRef<ScriptClass>(nameSpace,name);
+			}
+		}
+	}
+
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
 	{
 		MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);
 		mono_runtime_object_init(instance);
 
 		return instance;
+	}
+
+	void ScriptEngine::OnCreateEntity(Entity entity)
+	{
+		const auto& sc = entity.GetComponent<ScriptComponent>();
+
+		if (ScriptEngine::EntityClassExists(sc.ClassName))
+		{
+			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName],entity);
+			s_Data->EntityInstances[entity.GetUUID()] = instance;
+
+			instance->InvokeOnCreate();
+		}
+	}
+
+	MonoImage* ScriptEngine::GetCoreAssemblyImage()
+	{
+		return s_Data->CoreAssemblyImage;
+	}
+
+	Scene* ScriptEngine::GetSceneContext()
+	{
+		return s_Data->SceneContext;
+	}
+
+	void ScriptEngine::OnUpdateEntity(Entity entity, Timestep ts)
+	{
+		UUID entityUUID = entity.GetUUID();
+		RT_CORE_ASSERT(s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end());
+
+		Ref<ScriptInstance> instance =  s_Data->EntityInstances[entityUUID];
+
+		instance->InvokeOnUpdate((float)ts);
+		
 	}
 
 	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className)
@@ -199,6 +310,37 @@ namespace Raptor {
 	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
 	{
 		return mono_runtime_invoke(method, instance, params, nullptr);
+	}
+
+	ScriptInstance::ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity)
+		:m_ScriptClass(scriptClass)
+	{
+		m_Instance = scriptClass->Instantiate();
+
+		m_Contructor = s_Data->EntityClass.GetMethod(".ctor",1);
+		m_OnCreateMethod = scriptClass->GetMethod("OnCreate",0);
+		m_OnUpdateMethod = scriptClass->GetMethod("OnUpdate",1);
+
+		{
+			UUID entityID = entity.GetUUID();
+			void* param = &entityID;
+			m_ScriptClass->InvokeMethod(m_Instance, m_Contructor, &param);
+		}
+	}
+
+	void ScriptInstance::InvokeOnCreate()
+	{
+		if(m_OnCreateMethod)
+			m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod);
+	}
+
+	void ScriptInstance::InvokeOnUpdate(float ts)
+	{
+		if (m_OnUpdateMethod)
+		{
+			void* param = &ts;
+			m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
+		}
 	}
 
 }
