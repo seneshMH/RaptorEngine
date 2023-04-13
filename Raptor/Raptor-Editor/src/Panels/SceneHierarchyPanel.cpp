@@ -270,7 +270,7 @@ namespace Raptor {
 						bool isSelected = currentProjectionTypeString == projectionTypeString[i];
 						if (ImGui::Selectable(projectionTypeString[i], isSelected))
 						{
-							currentProjectionTypeString == projectionTypeString[i];
+							currentProjectionTypeString = projectionTypeString[i];
 							camera.SetProjectionType((SceneCamera::ProjectionType)i);
 						}
 
@@ -327,12 +327,12 @@ namespace Raptor {
 				}
 			});
 
-		DrawComponent<ScriptComponent>("Script", entity, [](auto& component)
+		DrawComponent<ScriptComponent>("Script", entity, [entity,scene = m_Context](auto& component) mutable
 			{
 				bool scriptClassExits = ScriptEngine::EntityClassExists(component.ClassName);
 
 				static char buffer[64];
-				strcpy(buffer, component.ClassName.c_str());
+				strcpy_s(buffer,sizeof(buffer), component.ClassName.c_str());
 
 				if (!scriptClassExits)
 				{
@@ -343,6 +343,70 @@ namespace Raptor {
 				{
 					component.ClassName = buffer;
 				}
+
+				//FIELDS
+				bool sceneRunning = scene->IsRunning();
+				if(sceneRunning)
+				{
+					Ref<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+					if (scriptInstance)
+					{
+						const auto& fields = scriptInstance->GetScriptClass()->GetFields();
+						for (const auto& [name, field] : fields)
+						{
+							if (field.Type == ScriptFieldType::Float)
+							{
+								float data = scriptInstance->GetFieldValue<float>(name);
+								if (ImGui::DragFloat(name.c_str(), &data))
+								{
+									scriptInstance->SetFieldValue(name, data);
+								}
+							}
+						}
+
+					}
+				}
+				else
+				{
+					if (scriptClassExits)
+					{
+						Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(component.ClassName);
+						const auto& fields = entityClass->GetFields();
+
+						auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
+
+						for (const auto& [name, field] : fields)
+						{
+							if (entityFields.find(name) != entityFields.end())
+							{
+								ScriptFieldInstance& scriptField = entityFields.at(name);
+
+								if (field.Type == ScriptFieldType::Float)
+								{
+									float data = scriptField.GetValue<float>();
+									if (ImGui::DragFloat(name.c_str(), &data))
+									{
+										scriptField.SetValue(data);
+									}
+								}
+							}
+							else
+							{
+								if (field.Type == ScriptFieldType::Float)
+								{
+									float data = 0.0f;
+									if (ImGui::DragFloat(name.c_str(), &data))
+									{
+										ScriptFieldInstance& fieldInstance = entityFields[name];
+										fieldInstance.Field = field;
+										fieldInstance.SetValue(data);
+									}
+								}
+							}
+						}
+					}
+				}
+
 
 				if (!scriptClassExits)
 				{
@@ -387,7 +451,7 @@ namespace Raptor {
 						bool isSelected = currentBodyTypeString == bodyTypeString[i];
 						if (ImGui::Selectable(bodyTypeString[i], isSelected))
 						{
-							currentBodyTypeString == bodyTypeString[i];
+							currentBodyTypeString = bodyTypeString[i];
 							component.Type = ((Rigidbody2DComponent::BodyType)i);
 						}
 

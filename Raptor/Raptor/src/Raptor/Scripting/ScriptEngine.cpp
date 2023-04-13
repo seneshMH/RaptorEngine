@@ -8,12 +8,31 @@
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
 #include "mono/metadata/object.h"
+#include "mono/metadata/tabledefs.h"
 
 #include "ScriptGlue.h"
 
 #include "glm/vec3.hpp"
 
 namespace Raptor {
+
+	static std::unordered_map<std::string, ScriptFieldType> s_ScriptFieldTypeMap = {
+		{"System.Single",	ScriptFieldType::Float},
+		{"System.Double",	ScriptFieldType::Double},
+		{"System.Boolean",	ScriptFieldType::Bool},
+		{"System.Char",		ScriptFieldType::Char},
+		{"System.Int16",	ScriptFieldType::Short},
+		{"System.Int32",	ScriptFieldType::Int},
+		{"System.Int64",	ScriptFieldType::Long},
+		{"System.Byte",		ScriptFieldType::Byte},
+		{"System.UInt16",	ScriptFieldType::UShort},
+		{"System.UInt32",	ScriptFieldType::UInt},
+		{"System.UInt64",	ScriptFieldType::ULong},
+		{"Raptor.Entity",	ScriptFieldType::Entity},
+		{"Raptor.Vector2",	ScriptFieldType::Vector2},
+		{"Raptor.Vector3",	ScriptFieldType::Vector3},
+		{"Raptor.Vector4",	ScriptFieldType::Vector4},
+	};
 
 	namespace Utils {
 
@@ -89,6 +108,43 @@ namespace Raptor {
 			}
 		}
 
+		ScriptFieldType MonoTypeToScriptFieldType(MonoType* monoType)
+		{
+			std::string typeName = mono_type_get_name(monoType);
+
+			auto it = s_ScriptFieldTypeMap.find(typeName);
+			if (it == s_ScriptFieldTypeMap.end())
+			{
+				RT_CORE_ERROR("Unknown Type {}",typeName);
+				return ScriptFieldType::None;
+			}
+			return it->second;
+		}
+	
+		const char* ScriptFieldTypeToString(ScriptFieldType type)
+		{
+			switch (type)
+			{
+			case ScriptFieldType::Float:	return "Float";
+			case ScriptFieldType::Double:	return "Double";
+			case ScriptFieldType::Bool:		return "Bool";
+			case ScriptFieldType::Char:		return "Char";
+			case ScriptFieldType::Byte:		return "Byte";
+			case ScriptFieldType::Short:	return "Short";
+			case ScriptFieldType::Int:		return "Int";
+			case ScriptFieldType::Long:		return "Long";
+			case ScriptFieldType::UByte:	return "UByte";
+			case ScriptFieldType::UShort:	return "UShort";
+			case ScriptFieldType::UInt:		return "UInt";
+			case ScriptFieldType::ULong:	return "ULong";
+			case ScriptFieldType::Entity:	return "Entity";
+			case ScriptFieldType::Vector2:	return "Vector2";
+			case ScriptFieldType::Vector3:	return "Vector3";
+			case ScriptFieldType::Vector4:	return "Vector4";
+			}
+
+			return "<Invalid>";
+		}
 	}
 
 	struct ScriptEngineData
@@ -98,10 +154,17 @@ namespace Raptor {
 
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
+
+		MonoAssembly* AppAssembly = nullptr;
+		MonoImage* AppAssemblyImage = nullptr;
+
 		ScriptClass EntityClass;
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
 		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
+
+		
+		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
 		Scene* SceneContext = nullptr;
 	};
@@ -115,11 +178,12 @@ namespace Raptor {
 
 		InitMono();
 		LoadAssembly("resources/scripts/Raptor-ScriptCore.dll");
-		LoadAssemblyClasses(s_Data->CoreAssembly);
+		LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");
+		LoadAssemblyClasses();
 		ScriptGlue::RegisterComponents();
 		ScriptGlue::RegisterFunctions();
 
-		s_Data->EntityClass = ScriptClass("Raptor", "Entity");
+		s_Data->EntityClass = ScriptClass("Raptor", "Entity",true);
 
 #if 0
 		s_Data->EntityClass = ScriptClass("Raptor", "Entity");
@@ -191,6 +255,12 @@ namespace Raptor {
 		//Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 	}
 
+	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
+	{
+		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
+		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+	}
+
 	void ScriptEngine::OnRuntimeStart(Scene* scene)
 	{
 		s_Data->SceneContext = scene;
@@ -202,49 +272,93 @@ namespace Raptor {
 		s_Data->EntityInstances.clear();
 	}
 
+	Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityId)
+	{
+		auto it = s_Data->EntityInstances.find(entityId);
+		if (it == s_Data->EntityInstances.end())
+			return nullptr;
+
+		return it->second;
+	}
+
+	Ref<ScriptClass> ScriptEngine::GetEntityClass(const std::string& name)
+	{
+		if (s_Data->EntityClasses.find(name) == s_Data->EntityClasses.end())
+			return nullptr;
+
+		return s_Data->EntityClasses.at(name);
+	}
+
 	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
 	{
 		return s_Data->EntityClasses;
 	}
 
-	void ScriptEngine::LoadAssemblyClasses(MonoAssembly* assembly)
+	ScriptFieldMap& ScriptEngine::GetScriptFieldMap(Entity entity)
+	{
+		RT_CORE_ASSERT(entity);
+
+		UUID entityID = entity.GetUUID();
+		
+		return s_Data->EntityScriptFields[entityID];
+	}
+
+	void ScriptEngine::LoadAssemblyClasses()
 	{
 		s_Data->EntityClasses.clear();
 
-		MonoImage* image = mono_assembly_get_image(assembly);
-		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(s_Data->AppAssemblyImage, MONO_TABLE_TYPEDEF);
 		int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
 
-		MonoClass* entityClass = mono_class_from_name(image, "Raptor", "Entity");
+		MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Raptor", "Entity");
 
 		for (int32_t i = 0; i < numTypes; i++)
 		{
 			uint32_t cols[MONO_TYPEDEF_SIZE];
 			mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
 
-			const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
-			const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+			const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
+			const char* className = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
 
 			std::string fullName;
 			if (strlen(nameSpace) != 0)
 			{
-				fullName = fmt::format("{}.{}",nameSpace,name);
+				fullName = fmt::format("{}.{}",nameSpace,className);
 			}
 			else
 			{
-				fullName = name;
+				fullName = className;
 			}
 
-			MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);
+			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, className);
 			
 			if (monoClass == entityClass)
 				continue;
 			
 			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
 
-			if (isEntity)
+			if (!isEntity)
+				continue;
+
+			Ref<ScriptClass> scriptClass = CreateRef<ScriptClass>(nameSpace, className);
+
+			s_Data->EntityClasses[fullName] = scriptClass;
+			
+			int fieldCount = mono_class_num_fields(monoClass);
+			RT_CORE_WARN("{} has {}", className, fieldCount);
+			void* iterator = nullptr;
+			while (MonoClassField* field = mono_class_get_fields(monoClass,&iterator))
 			{
-				s_Data->EntityClasses[fullName] = CreateRef<ScriptClass>(nameSpace,name);
+				const char* fieldName = mono_field_get_name(field);
+				uint32_t flags = mono_field_get_flags(field);
+				if (flags & FIELD_ATTRIBUTE_PUBLIC)
+				{
+					MonoType* type = mono_field_get_type(field);
+					ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(type);
+					RT_CORE_WARN("{} ({})",fieldName, Utils::ScriptFieldTypeToString(fieldType));
+				
+					scriptClass->m_Fields[fieldName] = { fieldType,fieldName,field };
+				}
 			}
 		}
 	}
@@ -263,9 +377,20 @@ namespace Raptor {
 
 		if (ScriptEngine::EntityClassExists(sc.ClassName))
 		{
-			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName],entity);
-			s_Data->EntityInstances[entity.GetUUID()] = instance;
+			UUID entityID = entity.GetUUID();
 
+			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName],entity);
+			s_Data->EntityInstances[entityID] = instance;
+
+			if (s_Data->EntityScriptFields.find(entityID) != s_Data->EntityScriptFields.end())
+			{
+				const ScriptFieldMap& fieldMap = s_Data->EntityScriptFields.at(entityID);
+
+				for (const auto& [name, fieldInstance] : fieldMap)
+				{
+					instance->SetFieldValue(name, fieldInstance.m_Buffer);
+				}
+			}
 			instance->InvokeOnCreate();
 		}
 	}
@@ -291,10 +416,10 @@ namespace Raptor {
 		
 	}
 
-	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className)
+	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore)
 		:m_ClassNamespace(classNamespace), m_ClassName(className)
 	{
-		m_MonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, classNamespace.c_str(), className.c_str());
+		m_MonoClass = mono_class_from_name(isCore ? s_Data->CoreAssemblyImage : s_Data->AppAssemblyImage, classNamespace.c_str(), className.c_str());
 	}
 
 	MonoObject* ScriptClass::Instantiate()
@@ -341,6 +466,34 @@ namespace Raptor {
 			void* param = &ts;
 			m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
 		}
+	}
+
+	bool ScriptInstance::GetFieldValueInternal(const std::string& name, void* buffer)
+	{
+		const auto& fields = m_ScriptClass->GetFields();
+		auto it = fields.find(name);
+
+		if (it == fields.end())
+			return false;
+
+		const ScriptField& field = it->second;
+		mono_field_get_value(m_Instance, field.ClassField, buffer);
+
+		return true;
+	}
+
+	bool ScriptInstance::SetFieldValueInternal(const std::string& name, const void* value)
+	{
+		const auto& fields = m_ScriptClass->GetFields();
+		auto it = fields.find(name);
+
+		if (it == fields.end())
+			return false;
+
+		const ScriptField& field = it->second;
+		mono_field_set_value(m_Instance, field.ClassField, (void*)value);
+
+		return true;
 	}
 
 }
