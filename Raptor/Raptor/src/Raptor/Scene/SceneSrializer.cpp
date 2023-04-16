@@ -2,6 +2,7 @@
 #include "SceneSrializer.h"
 #include "Entity.h"
 #include "Component.h"
+#include "Raptor/Scripting/ScriptEngine.h"
 
 #define YAML_CPP_STATIC_DEFINE
 #include <yaml-cpp/yaml.h>
@@ -27,7 +28,7 @@ namespace YAML {
 
 			rhs.x = node[0].as<float>();
 			rhs.y = node[1].as<float>();
-			
+
 			return true;
 		}
 
@@ -87,6 +88,25 @@ namespace YAML {
 			return true;
 		}
 	};
+
+	template<>
+	struct convert<Raptor::UUID>
+	{
+		static Node encode(const Raptor::UUID& uuid)
+		{
+			Node node;
+			node.push_back((uint64_t)uuid);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, Raptor::UUID& uuid)
+		{
+			uuid = node[0].as<uint64_t>();
+			return true;
+		}
+
+	};
 }
 
 namespace Raptor {
@@ -108,7 +128,7 @@ namespace Raptor {
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v)
 	{
 		out << YAML::Flow;
-		out << YAML::BeginSeq << v.x << v.y << v.z << v.w <<YAML::EndSeq;
+		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
 		return out;
 	}
 
@@ -134,18 +154,18 @@ namespace Raptor {
 		if (bodyType == "Static") return Rigidbody2DComponent::BodyType::Static;
 		if (bodyType == "Dyanamic") return Rigidbody2DComponent::BodyType::Dyanamic;
 		if (bodyType == "Kinematic") return Rigidbody2DComponent::BodyType::Kinematic;
-		
+
 		RT_CORE_ASSERT(false, "Unknown Type");
 		return Rigidbody2DComponent::BodyType::Static;
 	}
 
-	static void SerializeEntity(YAML::Emitter& out,Entity entity)
+	static void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{
 		RT_CORE_ASSERT(entity.HasComponent<IDComponent>());
 
 		out << YAML::BeginMap;
 		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
-		
+
 		if (entity.HasComponent<TagComponent>())
 		{
 			out << YAML::Key << "TagComponent";
@@ -177,7 +197,7 @@ namespace Raptor {
 			auto& cameraComponent = entity.GetComponent<CameraComponent>();
 			auto& camera = cameraComponent.Camera;
 
-			out << YAML::Key << "Camera" << YAML::Value ;
+			out << YAML::Key << "Camera" << YAML::Value;
 			out << YAML::BeginMap;
 			out << YAML::Key << "ProjectionType" << YAML::Value << (int)camera.GetProjectionType();
 			out << YAML::Key << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveVerticalFOV();
@@ -199,6 +219,62 @@ namespace Raptor {
 			out << YAML::BeginMap;
 			auto& scriptComponent = entity.GetComponent<ScriptComponent>();
 			out << YAML::Key << "ClassName" << YAML::Value << scriptComponent.ClassName;
+
+			Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(scriptComponent.ClassName);
+			const auto& fields = entityClass->GetFields();
+
+			if (fields.size() > 0)
+			{
+				out << YAML::Key << "ScriptFields" << YAML::Value;
+				auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
+
+
+				out << YAML::BeginSeq;
+				for (const auto& [name, field] : fields)
+				{
+					if (entityFields.find(name) == entityFields.end())
+						continue;
+
+
+					out << YAML::BeginMap;
+					out << YAML::Key << "Name" << YAML::Value << name;
+					out << YAML::Key << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.Type);
+
+					out << YAML::Key << "Data" << YAML::Value;
+
+					ScriptFieldInstance& scriptField = entityFields.at(name);
+
+#define FIELD_TYPE(FieldType,Type)	case ScriptFieldType::FieldType :\
+									out << scriptField.GetValue<Type>();\
+									break
+
+					switch (field.Type)
+					{
+						FIELD_TYPE(Float, float);
+						FIELD_TYPE(Double, double);
+						FIELD_TYPE(Bool, bool);
+						FIELD_TYPE(Char, char);
+						FIELD_TYPE(Byte, int8_t);
+						FIELD_TYPE(Short, int16_t);
+						FIELD_TYPE(Int, int32_t);
+						FIELD_TYPE(Long, int64_t);
+						FIELD_TYPE(UByte, uint8_t);
+						FIELD_TYPE(UShort, uint16_t);
+						FIELD_TYPE(UInt, uint32_t);
+						FIELD_TYPE(ULong, uint64_t);
+						FIELD_TYPE(Vector2, glm::vec2);
+						FIELD_TYPE(Vector3, glm::vec3);
+						FIELD_TYPE(Vector4, glm::vec4);
+						FIELD_TYPE(Entity, UUID);
+					}
+
+#undef FIELD_TYPE
+
+					out << YAML::EndMap;
+				}
+				out << YAML::EndSeq;
+			}
+
 			out << YAML::EndMap;//ScriptComponent
 		}
 
@@ -335,7 +411,7 @@ namespace Raptor {
 			for (auto entity : entities)
 			{
 				uint64_t uuid = entity["Entity"].as<uint64_t>();
-				
+
 				std::string name;
 				auto tagComponent = entity["TagComponent"];
 				if (tagComponent)
@@ -343,7 +419,7 @@ namespace Raptor {
 
 				RT_CORE_TRACE("Desirialize entity with ID = {0} , Name = {1}", uuid, name);
 
-				Entity desirializedEntity = m_Scene->CreateEntityWithUUID(uuid,name);
+				Entity desirializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
 
 				auto transformComponent = entity["TransformComponent"];
 				if (transformComponent)
@@ -366,7 +442,7 @@ namespace Raptor {
 					cc.Camera.SetPerspectiveVerticalFOV(cameraProps["PerspectiveFOV"].as<float>());
 					cc.Camera.SetPerspectiveNearClip(cameraProps["PerspectiveNear"].as<float>());
 					cc.Camera.SetPerspectiveFarClip(cameraProps["PerspectiveFar"].as<float>());
-					
+
 					cc.Camera.SetOrthographicSize(cameraProps["OrthographicSize"].as<float>());
 					cc.Camera.SetOrthographicNearClip(cameraProps["OrthographicNear"].as<float>());
 					cc.Camera.SetOrthographicFarClip(cameraProps["OrthographicFar"].as<float>());
@@ -379,7 +455,56 @@ namespace Raptor {
 				if (scriptComponent)
 				{
 					auto& sc = desirializedEntity.AddComponent<ScriptComponent>();
-					sc.ClassName = scriptComponent["ClassName"].as < std::string>();
+					sc.ClassName = scriptComponent["ClassName"].as<std::string>();
+
+					auto scriptFields = scriptComponent["ScriptFields"];
+					if (scriptFields)
+					{
+						Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
+						RT_CORE_ASSERT(entityClass);
+						
+						const auto& fields = entityClass->GetFields();
+						auto& entityFields = ScriptEngine::GetScriptFieldMap(desirializedEntity);
+						for (auto scriptField : scriptFields)
+						{
+							std::string name = scriptField["Name"].as<std::string>();
+							std::string typeString = scriptField["Type"].as<std::string>();
+							ScriptFieldType type = Utils::ScriptFieldTypeFromString(typeString);
+
+							ScriptFieldInstance& fieldInstance = entityFields[name];
+							RT_CORE_ASSERT(fields.find(name) != fields.end());
+							if (fields.find(name) == fields.end())
+								continue;
+							fieldInstance.Field = fields.at(name);
+
+#define READ_SCRIPT_FIELD(FieldType,Type) case ScriptFieldType::FieldType : \
+											{\
+												Type data = scriptField["Data"].as<Type>();\
+												fieldInstance.SetValue(data);\
+												break;\
+											}
+
+							switch (type)
+							{
+								READ_SCRIPT_FIELD(Float, float);
+								READ_SCRIPT_FIELD(Double, double);
+								READ_SCRIPT_FIELD(Bool, bool);
+								READ_SCRIPT_FIELD(Char, char);
+								READ_SCRIPT_FIELD(Byte, int8_t);
+								READ_SCRIPT_FIELD(Short, int16_t);
+								READ_SCRIPT_FIELD(Int, int32_t);
+								READ_SCRIPT_FIELD(Long, int64_t);
+								READ_SCRIPT_FIELD(UByte, uint8_t);
+								READ_SCRIPT_FIELD(UShort, uint16_t);
+								READ_SCRIPT_FIELD(UInt, uint32_t);
+								READ_SCRIPT_FIELD(ULong, uint64_t);
+								READ_SCRIPT_FIELD(Vector2, glm::vec2);
+								READ_SCRIPT_FIELD(Vector3, glm::vec3);
+								READ_SCRIPT_FIELD(Vector4, glm::vec4);
+								READ_SCRIPT_FIELD(Entity, UUID);
+							}
+						}
+					}
 				}
 
 				auto spriteRendererComponent = entity["SpriteRendererComponent"];
@@ -418,12 +543,12 @@ namespace Raptor {
 					auto& bc2d = desirializedEntity.AddComponent<BoxCollider2DComponent>();
 					bc2d.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
 					bc2d.Size = boxCollider2DComponent["Size"].as<glm::vec2>();
-					
+
 					bc2d.Density = boxCollider2DComponent["Density"].as<float>();
 					bc2d.Friction = boxCollider2DComponent["Friction"].as<float>();
 					bc2d.Restitution = boxCollider2DComponent["Restitution"].as<float>();
 					bc2d.RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
-				
+
 				}
 
 				auto circleCollider2DComponent = entity["CircleCollider2DComponent"];

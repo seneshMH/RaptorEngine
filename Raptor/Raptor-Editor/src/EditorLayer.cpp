@@ -7,6 +7,7 @@
 #include "Raptor/Scene/SceneSrializer.h"
 #include "Raptor/utils/PlatformUtils.h"
 #include "Raptor/Math/Math.h"
+#include "Raptor/Scripting/ScriptEngine.h"
 
 #include "ImGuizmo.h"
 
@@ -89,8 +90,7 @@ namespace Raptor {
 		if (commandLineArgs.Count > 1)
 		{
 			auto sceneFilePath = commandLineArgs[1];
-			SceneSrializer serializer(m_ActiveScene);
-			serializer.DeSerialize(sceneFilePath);
+			OpenScene(sceneFilePath);
 		}
 		
 		Renderer2D::SetLineWidth(4.0f);
@@ -109,6 +109,8 @@ namespace Raptor {
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		RT_PROFILE_FUNCTION();
+		m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
+
 
 		if (FrameBufferSpecification spec = m_FrameBuffer->GetSpecification();
 			m_viewportSize.x > 0.0f && m_viewportSize.y > 0.0f && // zero sized framebuffer is invalid
@@ -117,7 +119,7 @@ namespace Raptor {
 			m_FrameBuffer->Resize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
 			m_CameraController.OnResize(m_viewportSize.x, m_viewportSize.y);
 			m_EditorCamera.SetviewportSize(m_viewportSize.x, m_viewportSize.y);
-			m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
+			m_EditorCamera.SetviewportSize(m_viewportSize.x, m_viewportSize.y);
 		}
 
 		Renderer2D::ResetStats();
@@ -267,6 +269,15 @@ namespace Raptor {
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Script"))
+			{
+				if (ImGui::MenuItem("Relaod Assembly", "Ctrl+R"))
+				{
+					ScriptEngine::RelaodAssembly();
+				}
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenuBar();
 		}
 
@@ -307,7 +318,7 @@ namespace Raptor {
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 
-		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 
@@ -462,7 +473,14 @@ namespace Raptor {
 		}
 		case Key::R:
 		{
-			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			if(control)
+			{ 
+				ScriptEngine::RelaodAssembly();
+			}
+			else
+			{
+				m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			}
 			break;
 		}
 
@@ -549,7 +567,6 @@ namespace Raptor {
 	void EditorLayer::NewScene()
 	{
 		m_ActiveScene = CreateRef<Scene>();
-		m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 		m_EditorScenePath = std::filesystem::path();
@@ -582,7 +599,6 @@ namespace Raptor {
 		if (serializer.DeSerialize(path.string()))
 		{
 			m_EditorScene = newScene;
-			m_EditorScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
 
 			m_SceneHierarchyPanel.SetContext(m_EditorScene);
 			m_ActiveScene = m_EditorScene;
@@ -709,7 +725,6 @@ namespace Raptor {
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
-
 
 	void EditorLayer::OnDuplicateEntity()
 	{

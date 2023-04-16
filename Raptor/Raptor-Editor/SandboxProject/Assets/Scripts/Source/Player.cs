@@ -24,7 +24,7 @@ namespace Sandbox
 		void OnUpdate(float ts)
 		{
 			Time += ts;
-			Console.WriteLine($"Player OnUpdate {ts}");
+			//Console.WriteLine($"Player OnUpdate {Speed * ts}");
 
 			float speed = Speed;
 			Vector3 velocity = Vector3.Zero;
@@ -38,7 +38,19 @@ namespace Sandbox
 			else if (Input.IsKeyDown(KeyCode.D))
 				velocity.X = 1.0f;
 
-			velocity *= speed;
+			Entity cameraEntity = FindEntityByName("Camera");
+			if (cameraEntity != null)
+			{
+				Camera camera = cameraEntity.As<Camera>();
+
+				if (Input.IsKeyDown(KeyCode.Q))
+					camera.DistanceFromPlayer += speed * ts;
+				else if (Input.IsKeyDown(KeyCode.E))
+					camera.DistanceFromPlayer -= speed * ts;
+
+			}
+
+			velocity *= speed * ts;
 			m_RigidBody.ApplyLinerImpulse(velocity.XY, true);
 
 			Vector3 translation = m_Transform.Translation;

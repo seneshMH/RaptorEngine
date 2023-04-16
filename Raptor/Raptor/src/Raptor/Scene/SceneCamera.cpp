@@ -33,7 +33,10 @@ namespace Raptor {
 
 	void SceneCamera::SetviewportSize(uint32_t width, uint32_t heigh)
 	{
-		m_AscpectRatio = (float)width / (float)heigh;
+		if (width == 0 || heigh == 0)
+			m_AscpectRatio = 16.0f / 9.0f;
+		else
+			m_AscpectRatio = (float)width / (float)heigh;
 		
 		ReCalculateProjection();
 	}

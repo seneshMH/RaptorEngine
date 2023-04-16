@@ -121,30 +121,6 @@ namespace Raptor {
 			return it->second;
 		}
 	
-		const char* ScriptFieldTypeToString(ScriptFieldType type)
-		{
-			switch (type)
-			{
-			case ScriptFieldType::Float:	return "Float";
-			case ScriptFieldType::Double:	return "Double";
-			case ScriptFieldType::Bool:		return "Bool";
-			case ScriptFieldType::Char:		return "Char";
-			case ScriptFieldType::Byte:		return "Byte";
-			case ScriptFieldType::Short:	return "Short";
-			case ScriptFieldType::Int:		return "Int";
-			case ScriptFieldType::Long:		return "Long";
-			case ScriptFieldType::UByte:	return "UByte";
-			case ScriptFieldType::UShort:	return "UShort";
-			case ScriptFieldType::UInt:		return "UInt";
-			case ScriptFieldType::ULong:	return "ULong";
-			case ScriptFieldType::Entity:	return "Entity";
-			case ScriptFieldType::Vector2:	return "Vector2";
-			case ScriptFieldType::Vector3:	return "Vector3";
-			case ScriptFieldType::Vector4:	return "Vector4";
-			}
-
-			return "<Invalid>";
-		}
 	}
 
 	struct ScriptEngineData
@@ -157,6 +133,9 @@ namespace Raptor {
 
 		MonoAssembly* AppAssembly = nullptr;
 		MonoImage* AppAssemblyImage = nullptr;
+
+		std::filesystem::path CoreAssemblyFilePath;
+		std::filesystem::path AppAssemblyFilePath;
 
 		ScriptClass EntityClass;
 
@@ -177,11 +156,12 @@ namespace Raptor {
 		s_Data = new ScriptEngineData();
 
 		InitMono();
+		ScriptGlue::RegisterFunctions();
+
 		LoadAssembly("resources/scripts/Raptor-ScriptCore.dll");
 		LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");
 		LoadAssemblyClasses();
 		ScriptGlue::RegisterComponents();
-		ScriptGlue::RegisterFunctions();
 
 		s_Data->EntityClass = ScriptClass("Raptor", "Entity",true);
 
@@ -233,7 +213,9 @@ namespace Raptor {
 
 	void ScriptEngine::ShutdownMono()
 	{
-		//mono_domain_unload(s_Data->AppDomain);
+		mono_domain_set(mono_get_root_domain(), false);
+
+		mono_domain_unload(s_Data->AppDomain);
 		s_Data->AppDomain = nullptr;
 		mono_jit_cleanup(s_Data->RootDomain);
 		s_Data->RootDomain = nullptr;
@@ -250,15 +232,31 @@ namespace Raptor {
 		mono_domain_set(s_Data->AppDomain, true);
 
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
-
+		s_Data->CoreAssemblyFilePath = filepath;
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 		//Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 	}
 
 	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
 	{
+		s_Data->AppAssemblyFilePath = filepath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+	}
+
+	void ScriptEngine::RelaodAssembly()
+	{
+		mono_domain_set(mono_get_root_domain(), false);
+
+		mono_domain_unload(s_Data->AppDomain);
+
+		LoadAssembly(s_Data->CoreAssemblyFilePath);
+		LoadAppAssembly(s_Data->AppAssemblyFilePath);
+
+		LoadAssemblyClasses();
+
+		s_Data->EntityClass = ScriptClass("Raptor", "Entity", true);
+		ScriptGlue::RegisterComponents();
 	}
 
 	void ScriptEngine::OnRuntimeStart(Scene* scene)
@@ -301,6 +299,12 @@ namespace Raptor {
 		UUID entityID = entity.GetUUID();
 		
 		return s_Data->EntityScriptFields[entityID];
+	}
+
+	MonoObject* ScriptEngine::GetManagedInstance(UUID uuid)
+	{
+		RT_CORE_ASSERT(s_Data->EntityInstances.find(uuid) != s_Data->EntityInstances.end());
+		return s_Data->EntityInstances.at(uuid)->GetMangedObject();
 	}
 
 	void ScriptEngine::LoadAssemblyClasses()
@@ -388,7 +392,7 @@ namespace Raptor {
 
 				for (const auto& [name, fieldInstance] : fieldMap)
 				{
-					instance->SetFieldValue(name, fieldInstance.m_Buffer);
+					instance->SetFieldValueInternal(name, fieldInstance.m_Buffer);
 				}
 			}
 			instance->InvokeOnCreate();
@@ -478,7 +482,6 @@ namespace Raptor {
 
 		const ScriptField& field = it->second;
 		mono_field_get_value(m_Instance, field.ClassField, buffer);
-
 		return true;
 	}
 
