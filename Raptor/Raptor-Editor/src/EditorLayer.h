@@ -36,6 +36,7 @@ namespace Raptor {
 
 		void OnScenePlay();
 		void OnSceneStop();
+		void OnScenePause();
 
 		void OnSceneSimulate();
 		
@@ -79,12 +80,14 @@ namespace Raptor {
 		ContentBrowserPanel m_ContentBrowserPanel;
 
 		Ref<Texture2D> m_IconPlay;
+		Ref<Texture2D> m_IconPause;
 		Ref<Texture2D>	m_IconStop;
 		Ref<Texture2D>	m_IconSimiulate;
+		Ref<Texture2D>	m_IconStep;
 
 		enum class SceneState
 		{
-			Edit = 0, Play = 1, Simulate = 2
+			Edit = 0, Play = 1, Simulate = 2 
 		};
 
 		SceneState m_SceneState = SceneState::Edit;

@@ -38,6 +38,10 @@ namespace Raptor {
 		Entity GetPrimaryCameraEntity();
 
 		bool IsRunning() { return m_IsRunning; }
+		bool IsPaused() { return m_IsPaused; }
+
+		void SetPause(bool paused) { m_IsPaused = paused; }
+		void Step(int frames = 1);
 
 		template<typename... Components>
 		auto GetAllEntitesWidth()
@@ -58,6 +62,8 @@ namespace Raptor {
 		b2World* m_PhysicsWorld = nullptr;
 
 		bool m_IsRunning = false;
+		bool m_IsPaused = false;
+		int m_StepFrames = 0;
 
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
 
