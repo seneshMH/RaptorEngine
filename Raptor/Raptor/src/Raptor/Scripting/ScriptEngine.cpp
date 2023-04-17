@@ -4,6 +4,8 @@
 #include "Raptor/Scene/Scene.h"
 #include "Raptor/Scene/Entity.h"
 #include "Raptor/Core/Timestep.h"
+#include "Raptor/Core/Application.h"
+#include "Raptor/Core/Timer.h"
 
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
@@ -13,6 +15,7 @@
 #include "ScriptGlue.h"
 
 #include "glm/vec3.hpp"
+#include "FileWatch.h"
 
 namespace Raptor {
 
@@ -141,11 +144,14 @@ namespace Raptor {
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
 		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
-
-		
 		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
+		Scope<filewatch::FileWatch<std::string>> AppAsembleyFileWatcher;
+
+		bool AssemblyReloadPending = false;
+
 		Scene* SceneContext = nullptr;
+		Timer ReloadTimer;
 	};
 
 
@@ -237,15 +243,36 @@ namespace Raptor {
 		//Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 	}
 
+	static void OnAppAssemblyFileSystemEvent(const std::string& path, const filewatch::Event change_type)
+	{
+		if (!s_Data->AssemblyReloadPending && change_type == filewatch::Event::modified)
+		{
+			s_Data->AssemblyReloadPending = true;
+
+			s_Data->ReloadTimer = Timer();
+
+			Application::Get().SubmitToMainThread([]() 
+				{ 
+					s_Data->AppAsembleyFileWatcher.reset();
+					ScriptEngine::RelaodAssembly();
+				});
+		}
+	}
+
 	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
 	{
 		s_Data->AppAssemblyFilePath = filepath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+	
+		s_Data->AppAsembleyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
+		s_Data->AssemblyReloadPending = false;
 	}
 
 	void ScriptEngine::RelaodAssembly()
 	{
+		RT_CORE_WARN("Reloading took {}ms",s_Data->ReloadTimer.Elapsed());
+
 		mono_domain_set(mono_get_root_domain(), false);
 
 		mono_domain_unload(s_Data->AppDomain);

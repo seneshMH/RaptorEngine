@@ -20,7 +20,8 @@ project "Raptor-Editor"
         "%{wks.location}/Raptor/vendor",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
-        "%{IncludeDir.ImGuizmo}"
+        "%{IncludeDir.ImGuizmo}",
+        "%{IncludeDir.filewatch}"
     }
 
     links

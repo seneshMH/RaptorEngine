@@ -9,6 +9,7 @@ IncludeDir["yaml_cpp"] = "%{wks.location}/Raptor/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"] = "%{wks.location}/Raptor/vendor/ImGizmo"
 IncludeDir["Box2D"] = "%{wks.location}/Raptor/vendor/Box2D/include"
 IncludeDir["mono"] = "%{wks.location}/Raptor/vendor/mono/include"
+IncludeDir["filewatch"] = "%{wks.location}/Raptor/vendor/filewatch"
 
 LibraryDir = {}
 LibraryDir["mono"] = "%{wks.location}/Raptor/vendor/mono/lib/%{cfg.buildcfg}"

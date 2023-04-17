@@ -55,6 +55,8 @@ namespace Raptor {
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
+			ExecuteMainThreadQueue();
+
 			if (!m_Minimized)
 			{
 				{
@@ -118,6 +120,12 @@ namespace Raptor {
 		m_Running = false;
 	}
 
+	void Application::SubmitToMainThread(const std::function<void()>& function)
+	{
+		std::scoped_lock<std::mutex> lock(m_MainTheradQueueMutex);
+		m_MainTheradQueue.emplace_back(function);
+	}
+
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		m_Running = false;
@@ -138,5 +146,15 @@ namespace Raptor {
 
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 		return false;
+	}
+
+	void Application::ExecuteMainThreadQueue()
+	{
+		std::scoped_lock<std::mutex> lock(m_MainTheradQueueMutex);
+
+		for (auto& func : m_MainTheradQueue)
+			func();
+
+		m_MainTheradQueue.clear();
 	}
 }
