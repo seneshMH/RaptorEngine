@@ -11,6 +11,8 @@
 #include "mono/metadata/assembly.h"
 #include "mono/metadata/object.h"
 #include "mono/metadata/tabledefs.h"
+#include "mono/metadata/mono-debug.h"
+#include "mono/metadata/threads.h"
 
 #include "ScriptGlue.h"
 
@@ -67,7 +69,7 @@ namespace Raptor {
 			return buffer;
 		}
 
-		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
+		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath,bool loadPdb = false)
 		{
 			uint32_t fileSize = 0;
 			char* fileData = ReadBytes(assemblyPath.string(), &fileSize);
@@ -83,12 +85,32 @@ namespace Raptor {
 				return nullptr;
 			}
 
+			if (loadPdb)
+			{
+				std::filesystem::path pdbPath = assemblyPath;
+				pdbPath.replace_extension(".pdb");
+				RT_CORE_WARN("Trying to load PDB : {}", pdbPath);
+
+				if (std::filesystem::exists(pdbPath))
+				{
+					uint32_t pdbFileSize = 0;
+					char* pdbFileData = ReadBytes(pdbPath.string(), &pdbFileSize);
+
+					mono_debug_open_image_from_memory(image, (const mono_byte*)pdbFileData, pdbFileSize);
+					RT_CORE_INFO("Loaded PDB : {}", pdbPath);
+					delete[] pdbFileData;
+				}
+			}
+
+
 			std::string string = assemblyPath.string();
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, string.c_str(), &status, 0);
 			mono_image_close(image);
 
 			// Don't forget to free the file data
 			delete[] fileData;
+
+			
 
 			return assembly;
 		}
@@ -149,6 +171,8 @@ namespace Raptor {
 		Scope<filewatch::FileWatch<std::string>> AppAsembleyFileWatcher;
 
 		bool AssemblyReloadPending = false;
+
+		bool EnableDebuging = true;
 
 		Scene* SceneContext = nullptr;
 		Timer ReloadTimer;
@@ -211,10 +235,26 @@ namespace Raptor {
 	{
 		mono_set_assemblies_path("../mono/lib");
 
+		if (s_Data->EnableDebuging)
+		{
+			const char* argv[2] = {
+				"--debugger-agent=transport=dt_socket,address=127.0.0.1:2550,server=y,suspend=n,loglevel=3,logfile=monoDebugger.log",
+				"--soft-breakpoints"
+			};
+
+			mono_jit_parse_options(2, (char**)argv);
+			mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+		}
+
 		MonoDomain* rootDomain = mono_jit_init("RaptorJitRuntime");
 		RT_CORE_ASSERT(rootDomain);
 
 		s_Data->RootDomain = rootDomain;
+
+		if (s_Data->EnableDebuging)
+			mono_debug_domain_create(s_Data->RootDomain);
+	
+		mono_thread_set_main(mono_thread_current());
 	}
 
 	void ScriptEngine::ShutdownMono()
@@ -237,7 +277,7 @@ namespace Raptor {
 		s_Data->AppDomain = mono_domain_create_appdomain("RaptorScriptRuntime", nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 
-		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
+		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebuging);
 		s_Data->CoreAssemblyFilePath = filepath;
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 		//Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
@@ -262,7 +302,7 @@ namespace Raptor {
 	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
 	{
 		s_Data->AppAssemblyFilePath = filepath;
-		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
+		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath,s_Data->EnableDebuging);
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 	
 		s_Data->AppAsembleyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
@@ -465,7 +505,8 @@ namespace Raptor {
 
 	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
 	{
-		return mono_runtime_invoke(method, instance, params, nullptr);
+		MonoObject* exception = nullptr;
+		return mono_runtime_invoke(method, instance, params, &exception);
 	}
 
 	ScriptInstance::ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity)
