@@ -95,7 +95,9 @@ namespace Raptor {
 		}
 		else
 		{
-			NewProject();
+			//NewProject();
+			if (!OpenProject())
+				Application::Get().Close();
 		}
 		
 		Renderer2D::SetLineWidth(4.0f);
@@ -248,24 +250,24 @@ namespace Raptor {
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				// Disabling fullscreen would allow the window to be moved to the front of other windows,
-				// which we can't undo at the moment without finer window depth/z control.
-				if (ImGui::MenuItem("New", "Ctrl+N"))
+				if (ImGui::MenuItem("Open Project...", "Ctrl+O"))
+				{
+					OpenProject();
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
 				{
 					NewScene();
 				}
 
-				if (ImGui::MenuItem("Open...", "Ctrl+O"))
-				{
-					OpenScene();
-				}
-
-				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 				{
 					SaveScene();
 				}
 
-				if (ImGui::MenuItem("Save AS...", "Ctrl+Shift+S"))
+				if (ImGui::MenuItem("Save Scene AS...", "Ctrl+Shift+S"))
 				{
 					SaveSceneAs();
 				}
@@ -432,7 +434,7 @@ namespace Raptor {
 		{
 			if (control)
 			{
-				OpenScene();
+				OpenProject();
 			}
 			break;
 		}
@@ -574,6 +576,17 @@ namespace Raptor {
 	void EditorLayer::NewProject()
 	{
 		Project::New();
+	}
+
+	bool EditorLayer::OpenProject()
+	{
+		std::string filePath = FileDalogs::OpenFile("Raptor Project (*.rproj)\0*.rproj\0");
+
+		if (filePath.empty())
+			return false;
+		
+		OpenProject(filePath);
+		return true;
 	}
 
 	void EditorLayer::OpenProject(const std::filesystem::path& path)

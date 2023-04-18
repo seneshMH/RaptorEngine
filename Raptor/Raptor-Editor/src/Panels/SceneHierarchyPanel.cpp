@@ -7,6 +7,7 @@
 #include "Raptor/Scene/Component.h"
 #include "Raptor/Renderer/Texture.h"
 #include "Raptor/Scripting/ScriptEngine.h"
+#include "Raptor/UI/UI.h"
 
 
 namespace Raptor {
@@ -332,14 +333,12 @@ namespace Raptor {
 				static char buffer[64];
 				strcpy_s(buffer,sizeof(buffer), component.ClassName.c_str());
 
-				if (!scriptClassExits)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
-				}
+				UI::ScopedStyleColor textColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f), !scriptClassExits);
 
 				if (ImGui::InputText("Class", buffer, sizeof(buffer)))
 				{
 					component.ClassName = buffer;
+					return;
 				}
 
 				//FIELDS
@@ -405,11 +404,6 @@ namespace Raptor {
 					}
 				}
 
-
-				if (!scriptClassExits)
-				{
-					ImGui::PopStyleColor();
-				}
 			});
 
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)

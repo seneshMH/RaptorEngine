@@ -139,7 +139,11 @@ namespace Raptor {
 
 		bool AssemblyReloadPending = false;
 
+#ifdef RT_DEBUG
 		bool EnableDebuging = true;
+#else
+		bool EnableDebuging = false;
+#endif // RT_DEBUG
 
 		Scene* SceneContext = nullptr;
 		Timer ReloadTimer;
