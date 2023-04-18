@@ -28,3 +28,5 @@
 #include "Raptor/Scene/Entity.h"
 #include "Raptor/Scene/ScriptableEntity.h"
 
+#include "Raptor/Project/Project.h"
+

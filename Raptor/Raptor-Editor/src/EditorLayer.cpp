@@ -13,8 +13,7 @@
 
 namespace Raptor {
 
-	extern const std::filesystem::path s_AssetPath;
-
+	
 	EditorLayer::EditorLayer()
 		:Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f, true)
 	{
@@ -24,7 +23,7 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		m_CheckerBordTexture = Texture2D::Create("assets/images/checker.png");
+		//m_CheckerBordTexture = Texture2D::Create("assets/images/checker.png");
 		m_IconPlay = Texture2D::Create("resources/icons/PlayButton.png");
 		m_IconPause = Texture2D::Create("resources/icons/PauseButton.png");
 		m_IconStop = Texture2D::Create("resources/icons/StopButton.png");
@@ -91,8 +90,12 @@ namespace Raptor {
 		auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
 		if (commandLineArgs.Count > 1)
 		{
-			auto sceneFilePath = commandLineArgs[1];
-			OpenScene(sceneFilePath);
+			auto projectFilePath = commandLineArgs[1];
+			OpenProject(projectFilePath);
+		}
+		else
+		{
+			NewProject();
 		}
 		
 		Renderer2D::SetLineWidth(4.0f);
@@ -284,7 +287,7 @@ namespace Raptor {
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
-		m_ContentBrowserPanel.OnImGuiRender();
+		m_ContentBrowserPanel->OnImGuiRender();
 
 		ImGui::Begin("Render Stats");
 
@@ -334,7 +337,7 @@ namespace Raptor {
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				const wchar_t* path = (const wchar_t*)payload->Data;
-				OpenScene(std::filesystem::path(s_AssetPath) / path);
+				OpenScene(path);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -489,6 +492,8 @@ namespace Raptor {
 		default:
 			break;
 		}
+
+		return false;
 	}
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
@@ -564,6 +569,26 @@ namespace Raptor {
 		}
 
 		Renderer2D::EndScene();
+	}
+
+	void EditorLayer::NewProject()
+	{
+		Project::New();
+	}
+
+	void EditorLayer::OpenProject(const std::filesystem::path& path)
+	{
+		if (Project::Load(path))
+		{
+			std::filesystem::path startScenePath = Project::GetAssetFileSystemPath( Project::GetActive()->GetConfig().StartScene);
+			OpenScene(startScenePath);
+			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
+		}
+	}
+
+	void EditorLayer::SaveProject()
+	{
+		//Project::SaveActive();
 	}
 
 	void EditorLayer::NewScene()
@@ -669,7 +694,7 @@ namespace Raptor {
 		{
 			{
 				Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
-				if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+				if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
 				{
 					if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate)
 						OnScenePlay();
@@ -685,7 +710,7 @@ namespace Raptor {
 				ImGui::SameLine();
 			
 			Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play) ? m_IconSimiulate : m_IconStop;
-			if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+			if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
 			{
 				if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play)
 					OnSceneSimulate();
@@ -702,7 +727,7 @@ namespace Raptor {
 			ImGui::SameLine();
 			{
 				Ref<Texture2D> icon = m_IconPause;
-				if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+				if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
 				{
 					m_ActiveScene->SetPause(!isPaused);
 				}
@@ -713,7 +738,7 @@ namespace Raptor {
 				ImGui::SameLine();
 				{
 					Ref<Texture2D> icon = m_IconStep;
-					if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+					if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
 					{
 						m_ActiveScene->Step(1);
 					}

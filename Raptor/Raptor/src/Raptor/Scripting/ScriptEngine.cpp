@@ -6,6 +6,8 @@
 #include "Raptor/Core/Timestep.h"
 #include "Raptor/Core/Application.h"
 #include "Raptor/Core/Timer.h"
+#include "Raptor/Core/Buffer.h"
+#include "Raptor/Core/FileSystem.h"
 
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
@@ -41,42 +43,14 @@ namespace Raptor {
 
 	namespace Utils {
 
-		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
-		{
-			std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-
-			if (!stream)
-			{
-				// Failed to open the file
-				return nullptr;
-			}
-
-			std::streampos end = stream.tellg();
-			stream.seekg(0, std::ios::beg);
-			uint32_t size = (uint32_t)(end - stream.tellg());
-
-			if (size == 0)
-			{
-				// File is empty
-				return nullptr;
-			}
-
-			char* buffer = new char[size];
-			stream.read((char*)buffer, size);
-			stream.close();
-
-			*outSize = size;
-			return buffer;
-		}
-
 		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath,bool loadPdb = false)
 		{
-			uint32_t fileSize = 0;
-			char* fileData = ReadBytes(assemblyPath.string(), &fileSize);
-
+			
+			ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);
+			
 			// NOTE: We can't use this image for anything other than loading the assembly because this image doesn't have a reference to the assembly
 			MonoImageOpenStatus status;
-			MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
+			MonoImage* image = mono_image_open_from_data_full(fileData.As<char>(), fileData.Size(), 1, &status, 0);
 
 			if (status != MONO_IMAGE_OK)
 			{
@@ -93,12 +67,10 @@ namespace Raptor {
 
 				if (std::filesystem::exists(pdbPath))
 				{
-					uint32_t pdbFileSize = 0;
-					char* pdbFileData = ReadBytes(pdbPath.string(), &pdbFileSize);
+					ScopedBuffer pdbFileData = FileSystem::ReadFileBinary(pdbPath);
 
-					mono_debug_open_image_from_memory(image, (const mono_byte*)pdbFileData, pdbFileSize);
+					mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), pdbFileData.Size());
 					RT_CORE_INFO("Loaded PDB : {}", pdbPath);
-					delete[] pdbFileData;
 				}
 			}
 
@@ -106,11 +78,6 @@ namespace Raptor {
 			std::string string = assemblyPath.string();
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, string.c_str(), &status, 0);
 			mono_image_close(image);
-
-			// Don't forget to free the file data
-			delete[] fileData;
-
-			
 
 			return assembly;
 		}
@@ -188,41 +155,25 @@ namespace Raptor {
 		InitMono();
 		ScriptGlue::RegisterFunctions();
 
-		LoadAssembly("resources/scripts/Raptor-ScriptCore.dll");
-		LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");
+		bool status = LoadAssembly("resources/scripts/Raptor-ScriptCore.dll");
+		if (!status)
+		{
+			RT_CORE_ERROR("[ScriptEngine] could not load core assembly");
+			return;
+		}
+
+		status = LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");
+		if (!status)
+		{
+			RT_CORE_ERROR("[ScriptEngine] could not load app assembly");
+			return;
+		}
+
 		LoadAssemblyClasses();
 		ScriptGlue::RegisterComponents();
 
 		s_Data->EntityClass = ScriptClass("Raptor", "Entity",true);
 
-#if 0
-		s_Data->EntityClass = ScriptClass("Raptor", "Entity");
-
-		MonoObject* instance = s_Data->EntityClass.Instantiate();
-
-		MonoMethod* printMesageFunc = s_Data->EntityClass.GetMethod("PrintMessage", 0);
-		s_Data->EntityClass.InvokeMethod(instance,printMesageFunc, nullptr);
-
-		int value = 5;
-		void* param = &value;
-		MonoMethod* printIntFunc = s_Data->EntityClass.GetMethod( "PrintInt", 1);
-		s_Data->EntityClass.InvokeMethod(instance,printIntFunc, &param);
-
-		int value1 = 20;
-		int value2 = 30;
-
-		void* params[2] = {
-			&value1,
-			&value2
-		};
-		MonoMethod* printIntsFunc = s_Data->EntityClass.GetMethod("PrintInts", 2);
-		s_Data->EntityClass.InvokeMethod(instance,printIntsFunc, params);
-
-		MonoString* monoString = mono_string_new(s_Data->AppDomain, "Hello from c++");
-		void* stringParam = monoString;
-		MonoMethod* printCustomMesageFunc = s_Data->EntityClass.GetMethod( "PrintCustomMessage", 1);
-		s_Data->EntityClass.InvokeMethod(instance,printCustomMesageFunc, &stringParam);
-#endif // 0
 	}
 
 	void ScriptEngine::Shutdown()
@@ -272,15 +223,18 @@ namespace Raptor {
 		return s_Data->EntityClasses.find(fullClassName) != s_Data->EntityClasses.end();
 	}
 
-	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
+	bool ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
 	{
 		s_Data->AppDomain = mono_domain_create_appdomain("RaptorScriptRuntime", nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebuging);
+		if (s_Data->CoreAssembly == nullptr)
+			return false;
+
 		s_Data->CoreAssemblyFilePath = filepath;
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
-		//Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
+		return true;
 	}
 
 	static void OnAppAssemblyFileSystemEvent(const std::string& path, const filewatch::Event change_type)
@@ -299,14 +253,17 @@ namespace Raptor {
 		}
 	}
 
-	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
+	bool ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
 	{
 		s_Data->AppAssemblyFilePath = filepath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath,s_Data->EnableDebuging);
+		if (s_Data->AppAssembly == nullptr)
+			return false;
+
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
-	
 		s_Data->AppAsembleyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
 		s_Data->AssemblyReloadPending = false;
+		return true;
 	}
 
 	void ScriptEngine::RelaodAssembly()
@@ -479,11 +436,15 @@ namespace Raptor {
 	void ScriptEngine::OnUpdateEntity(Entity entity, Timestep ts)
 	{
 		UUID entityUUID = entity.GetUUID();
-		RT_CORE_ASSERT(s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end());
-
-		Ref<ScriptInstance> instance =  s_Data->EntityInstances[entityUUID];
-
-		instance->InvokeOnUpdate((float)ts);
+		if (s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end())
+		{
+			Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
+			instance->InvokeOnUpdate((float)ts);
+		}
+		else
+		{
+			RT_CORE_ERROR("Could not find entity script instance {}",entity.GetName());
+		}
 		
 	}
 

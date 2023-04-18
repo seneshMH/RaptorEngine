@@ -40,7 +40,7 @@ Entities:
       Scale: [0.44426322, 0.450000882, 0.450000137]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\images\checker.png
+      TexturePath: Textures\checker.png
       TilingFactor: 2
     Rigidbody2DComponent:
       BodyType: Dyanamic

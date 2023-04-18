@@ -11,8 +11,6 @@
 
 namespace Raptor {
 
-	extern const std::filesystem::path s_AssetPath;
-
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& scene)
 	{
 		SetContext(scene);
@@ -424,7 +422,7 @@ namespace Raptor {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 					{
 						const wchar_t* path = (const wchar_t*)payload->Data;
-						std::filesystem::path texturePath = std::filesystem::path(s_AssetPath) / path;
+						std::filesystem::path texturePath(path);
 						component.Texture = Texture2D::Create(texturePath.string());
 					}
 					ImGui::EndDragDropTarget();

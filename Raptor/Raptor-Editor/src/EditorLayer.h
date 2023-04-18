@@ -26,6 +26,10 @@ namespace Raptor {
 
 		void OnOverlayRender();
 
+		void NewProject();
+		void OpenProject(const std::filesystem::path& path);
+		void SaveProject();
+
 		void NewScene();
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
@@ -77,7 +81,7 @@ namespace Raptor {
 		bool m_ShowPhysicsColliders = false;
 
 		SceneHierarchyPanel m_SceneHierarchyPanel;
-		ContentBrowserPanel m_ContentBrowserPanel;
+		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
 
 		Ref<Texture2D> m_IconPlay;
 		Ref<Texture2D> m_IconPause;
