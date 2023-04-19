@@ -4,6 +4,7 @@
 #include "ScriptableEntity.h"
 #include "Raptor/Renderer/Renderer2D.h"
 #include "Entity.h"
+#include "Raptor/Scripting/ScriptEngine.h"
 
 #include <box2d/b2_world.h>
 #include <box2d/b2_body.h>
@@ -114,17 +115,34 @@ namespace Raptor {
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
 
+		m_EntityMap[uuid] = entity;
+
 		return entity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
+		m_EntityMap.erase(entity.GetUUID());
 	}
 
 	void Scene::OnRuntimeStart()
 	{
+		m_IsRunning = true;
 		OnPhysics2DStart();
+
+		{
+			ScriptEngine::OnRuntimeStart(this);
+
+			auto view = m_Registry.view<ScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e , this };
+
+				ScriptEngine::OnCreateEntity(entity);
+			}
+		}
+
 	}
 
 	void Scene::OnSimiulationStart()
@@ -134,7 +152,10 @@ namespace Raptor {
 
 	void Scene::OnRuntimeStop()
 	{
+		m_IsRunning = false;
 		OnPhysics2DStop();
+
+		ScriptEngine::OnRuntimeStop();
 	}
 
 	void Scene::OnSimiulationStop()
@@ -144,38 +165,52 @@ namespace Raptor {
 
 	void Scene::OnUpdateRunTime(Timestep ts)
 	{
+		if (!m_IsPaused || m_StepFrames-- > 0)
 		{
-			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
-				{
-					if (!nsc.Instance)
-					{
-						nsc.Instance = nsc.InstantiateScript();
-						nsc.Instance->m_Entity = Entity{ entity ,this };
-						nsc.Instance->OnCreate();
-					}
-
-					nsc.Instance->OnUpdate(ts);
-				});
-		}
-
-		//Physics
-		{
-			const int32_t velocityIteration = 6;
-			const int32_t posiionIteration = 2;
-			m_PhysicsWorld->Step(ts, velocityIteration, posiionIteration);
-
-			auto view = m_Registry.view<Rigidbody2DComponent>();
-			for (auto e : view)
 			{
-				Entity entity = { e,this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+				{
+					//C# update
+					auto view = m_Registry.view<ScriptComponent>();
+					for (auto e : view)
+					{
+						Entity entity = { e , this };
 
-				b2Body* body = (b2Body*)rb2d.RuntimeBody;
-				const auto& position = body->GetPosition();
-				transform.Translation.x = position.x;
-				transform.Translation.y = position.y;
-				transform.Rotation.z = body->GetAngle();
+						ScriptEngine::OnUpdateEntity(entity, ts);
+					}
+				}
+
+				m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+					{
+						if (!nsc.Instance)
+						{
+							nsc.Instance = nsc.InstantiateScript();
+							nsc.Instance->m_Entity = Entity{ entity ,this };
+							nsc.Instance->OnCreate();
+						}
+
+						nsc.Instance->OnUpdate(ts);
+					});
+			}
+
+			//Physics
+			{
+				const int32_t velocityIteration = 6;
+				const int32_t posiionIteration = 2;
+				m_PhysicsWorld->Step(ts, velocityIteration, posiionIteration);
+
+				auto view = m_Registry.view<Rigidbody2DComponent>();
+				for (auto e : view)
+				{
+					Entity entity = { e,this };
+					auto& transform = entity.GetComponent<TransformComponent>();
+					auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+
+					b2Body* body = (b2Body*)rb2d.RuntimeBody;
+					const auto& position = body->GetPosition();
+					transform.Translation.x = position.x;
+					transform.Translation.y = position.y;
+					transform.Rotation.z = body->GetAngle();
+				}
 			}
 		}
 
@@ -227,27 +262,29 @@ namespace Raptor {
 
 	void Scene::OnUpdateSimiulation(Timestep ts, EditorCamera& camera)
 	{
-		//Physics
+		if (!m_IsPaused || m_StepFrames-- > 0)
 		{
-			const int32_t velocityIteration = 6;
-			const int32_t posiionIteration = 2;
-			m_PhysicsWorld->Step(ts, velocityIteration, posiionIteration);
-
-			auto view = m_Registry.view<Rigidbody2DComponent>();
-			for (auto e : view)
+			//Physics
 			{
-				Entity entity = { e,this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+				const int32_t velocityIteration = 6;
+				const int32_t posiionIteration = 2;
+				m_PhysicsWorld->Step(ts, velocityIteration, posiionIteration);
 
-				b2Body* body = (b2Body*)rb2d.RuntimeBody;
-				const auto& position = body->GetPosition();
-				transform.Translation.x = position.x;
-				transform.Translation.y = position.y;
-				transform.Rotation.z = body->GetAngle();
+				auto view = m_Registry.view<Rigidbody2DComponent>();
+				for (auto e : view)
+				{
+					Entity entity = { e,this };
+					auto& transform = entity.GetComponent<TransformComponent>();
+					auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+
+					b2Body* body = (b2Body*)rb2d.RuntimeBody;
+					const auto& position = body->GetPosition();
+					transform.Translation.x = position.x;
+					transform.Translation.y = position.y;
+					transform.Rotation.z = body->GetAngle();
+				}
 			}
 		}
-
 
 		RenderScene(camera);
 	}
@@ -259,6 +296,9 @@ namespace Raptor {
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
 	{
+		if (m_ViewportWidth == width && m_ViewportHeight == height)
+			return;
+
 		m_ViewportWidth = width;
 		m_ViewportHeight = height;
 
@@ -279,6 +319,28 @@ namespace Raptor {
 		CopyComponentIfExists(AllComponents{}, newEntity, entity);
 	}
 
+	Entity Scene::GetEntityByUUID(UUID uuid)
+	{
+		if (m_EntityMap.find(uuid) != m_EntityMap.end())
+			return { m_EntityMap.at(uuid),this };
+
+		return {};
+	}
+
+	Entity Scene::FindEntityByName(std::string_view name)
+	{
+		auto view = m_Registry.view<TagComponent>();
+		for (auto entity : view)
+		{
+			const TagComponent& tc = view.get<TagComponent>(entity);
+			if (tc.Tag == name)
+			{
+				return Entity(entity, this);
+			}
+		}
+		return {};
+	}
+
 	Entity Scene::GetPrimaryCameraEntity()
 	{
 		auto view = m_Registry.view<CameraComponent>();
@@ -291,6 +353,11 @@ namespace Raptor {
 			}
 		}
 		return {};
+	}
+
+	void  Scene::Step(int frames)
+	{
+		m_StepFrames = frames;
 	}
 
 	void Scene::OnPhysics2DStart()
@@ -406,6 +473,12 @@ namespace Raptor {
 	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
 	{
 		component.Camera.SetviewportSize(m_ViewportWidth, m_ViewportHeight);
+	}
+
+	template<>
+	void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
+	{
+
 	}
 
 	template<>

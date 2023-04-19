@@ -2,13 +2,17 @@
 #include <imgui/imgui.h>
 #include "ContentBrowserPanel.h"
 
+#include "Raptor/Project/Project.h"
+
 namespace Raptor {
 
-	extern const std::filesystem::path s_AssetPath = "assets";
-
 	ContentBrowserPanel::ContentBrowserPanel()
-		:m_CurrentDirectory(s_AssetPath)
+		/* :m_BaseDirectory(Project::GetAssetsDirectory()), m_CurrentDirectory(m_BaseDirectory)*/
 	{
+		m_BaseDirectory = Project::GetAssetsDirectory();
+		m_CurrentDirectory = m_BaseDirectory;
+
+
 		m_DirectoryIcon = Texture2D::Create("resources/icons/contentBrowser/DirectoryIcon.png");
 		m_FileIcon = Texture2D::Create("resources/icons/contentBrowser/FileIcon.png");
 	}
@@ -17,7 +21,7 @@ namespace Raptor {
 	{
 		ImGui::Begin("Content Browser");
 
-		if (m_CurrentDirectory != std::filesystem::path(s_AssetPath))
+		if (m_CurrentDirectory != std::filesystem::path(m_BaseDirectory))
 		{
 			if (ImGui::Button("<-"))
 			{
@@ -50,7 +54,7 @@ namespace Raptor {
 
 			if (ImGui::BeginDragDropSource())
 			{
-				auto relativePath = std::filesystem::relative(path, s_AssetPath);
+				std::filesystem::path relativePath(path);
 
 				const wchar_t* itemPath = relativePath.c_str();
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath,(wcslen(itemPath) + 1) * sizeof(wchar_t),ImGuiCond_Once);

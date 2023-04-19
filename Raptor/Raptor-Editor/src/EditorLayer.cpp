@@ -7,13 +7,13 @@
 #include "Raptor/Scene/SceneSrializer.h"
 #include "Raptor/utils/PlatformUtils.h"
 #include "Raptor/Math/Math.h"
+#include "Raptor/Scripting/ScriptEngine.h"
 
 #include "ImGuizmo.h"
 
 namespace Raptor {
 
-	extern const std::filesystem::path s_AssetPath;
-
+	
 	EditorLayer::EditorLayer()
 		:Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f, true)
 	{
@@ -23,10 +23,12 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		m_CheckerBordTexture = Texture2D::Create("assets/images/checker.png");
+		//m_CheckerBordTexture = Texture2D::Create("assets/images/checker.png");
 		m_IconPlay = Texture2D::Create("resources/icons/PlayButton.png");
+		m_IconPause = Texture2D::Create("resources/icons/PauseButton.png");
 		m_IconStop = Texture2D::Create("resources/icons/StopButton.png");
 		m_IconSimiulate = Texture2D::Create("resources/icons/SimulateButton.png");
+		m_IconStep = Texture2D::Create("resources/icons/StepButton.png");
 
 		FrameBufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8 , FramebufferTextureFormat::RED_INTEGER ,FramebufferTextureFormat::Depth };
@@ -88,9 +90,14 @@ namespace Raptor {
 		auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
 		if (commandLineArgs.Count > 1)
 		{
-			auto sceneFilePath = commandLineArgs[1];
-			SceneSrializer serializer(m_ActiveScene);
-			serializer.DeSerialize(sceneFilePath);
+			auto projectFilePath = commandLineArgs[1];
+			OpenProject(projectFilePath);
+		}
+		else
+		{
+			//NewProject();
+			if (!OpenProject())
+				Application::Get().Close();
 		}
 		
 		Renderer2D::SetLineWidth(4.0f);
@@ -109,6 +116,8 @@ namespace Raptor {
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		RT_PROFILE_FUNCTION();
+		m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
+
 
 		if (FrameBufferSpecification spec = m_FrameBuffer->GetSpecification();
 			m_viewportSize.x > 0.0f && m_viewportSize.y > 0.0f && // zero sized framebuffer is invalid
@@ -117,7 +126,7 @@ namespace Raptor {
 			m_FrameBuffer->Resize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
 			m_CameraController.OnResize(m_viewportSize.x, m_viewportSize.y);
 			m_EditorCamera.SetviewportSize(m_viewportSize.x, m_viewportSize.y);
-			m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
+			m_EditorCamera.SetviewportSize(m_viewportSize.x, m_viewportSize.y);
 		}
 
 		Renderer2D::ResetStats();
@@ -241,24 +250,24 @@ namespace Raptor {
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				// Disabling fullscreen would allow the window to be moved to the front of other windows,
-				// which we can't undo at the moment without finer window depth/z control.
-				if (ImGui::MenuItem("New", "Ctrl+N"))
+				if (ImGui::MenuItem("Open Project...", "Ctrl+O"))
+				{
+					OpenProject();
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
 				{
 					NewScene();
 				}
 
-				if (ImGui::MenuItem("Open...", "Ctrl+O"))
-				{
-					OpenScene();
-				}
-
-				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 				{
 					SaveScene();
 				}
 
-				if (ImGui::MenuItem("Save AS...", "Ctrl+Shift+S"))
+				if (ImGui::MenuItem("Save Scene AS...", "Ctrl+Shift+S"))
 				{
 					SaveSceneAs();
 				}
@@ -267,11 +276,20 @@ namespace Raptor {
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Script"))
+			{
+				if (ImGui::MenuItem("Relaod Assembly", "Ctrl+R"))
+				{
+					ScriptEngine::RelaodAssembly();
+				}
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenuBar();
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
-		m_ContentBrowserPanel.OnImGuiRender();
+		m_ContentBrowserPanel->OnImGuiRender();
 
 		ImGui::Begin("Render Stats");
 
@@ -307,7 +325,7 @@ namespace Raptor {
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 
-		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 
@@ -321,7 +339,7 @@ namespace Raptor {
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				const wchar_t* path = (const wchar_t*)payload->Data;
-				OpenScene(std::filesystem::path(s_AssetPath) / path);
+				OpenScene(path);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -416,7 +434,7 @@ namespace Raptor {
 		{
 			if (control)
 			{
-				OpenScene();
+				OpenProject();
 			}
 			break;
 		}
@@ -462,13 +480,22 @@ namespace Raptor {
 		}
 		case Key::R:
 		{
-			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			if(control)
+			{ 
+				ScriptEngine::RelaodAssembly();
+			}
+			else
+			{
+				m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			}
 			break;
 		}
 
 		default:
 			break;
 		}
+
+		return false;
 	}
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
@@ -546,10 +573,40 @@ namespace Raptor {
 		Renderer2D::EndScene();
 	}
 
+	void EditorLayer::NewProject()
+	{
+		Project::New();
+	}
+
+	bool EditorLayer::OpenProject()
+	{
+		std::string filePath = FileDalogs::OpenFile("Raptor Project (*.rproj)\0*.rproj\0");
+
+		if (filePath.empty())
+			return false;
+		
+		OpenProject(filePath);
+		return true;
+	}
+
+	void EditorLayer::OpenProject(const std::filesystem::path& path)
+	{
+		if (Project::Load(path))
+		{
+			std::filesystem::path startScenePath = Project::GetAssetFileSystemPath( Project::GetActive()->GetConfig().StartScene);
+			OpenScene(startScenePath);
+			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
+		}
+	}
+
+	void EditorLayer::SaveProject()
+	{
+		//Project::SaveActive();
+	}
+
 	void EditorLayer::NewScene()
 	{
 		m_ActiveScene = CreateRef<Scene>();
-		m_ActiveScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 		m_EditorScenePath = std::filesystem::path();
@@ -582,7 +639,6 @@ namespace Raptor {
 		if (serializer.DeSerialize(path.string()))
 		{
 			m_EditorScene = newScene;
-			m_EditorScene->OnViewportResize((uint32_t)m_viewportSize.x, (uint32_t)m_viewportSize.y);
 
 			m_SceneHierarchyPanel.SetContext(m_EditorScene);
 			m_ActiveScene = m_EditorScene;
@@ -640,31 +696,69 @@ namespace Raptor {
 		ImVec4 tintColor = ImVec4(1, 1, 1, 1);
 		if (!toolbarEnabled)
 			tintColor.x = 0.5f;
+
+		ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
+		
+		bool hasPlayButton = m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play;
+		bool hasSimulateButton = m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate;
+		bool hasPauseButton = m_SceneState != SceneState::Edit;
+
+		if (hasPlayButton)
 		{
-			Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
-			ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
-			if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
 			{
-				if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate)
-					OnScenePlay();
-				else if (m_SceneState == SceneState::Play)
-					OnSceneStop();
+				Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
+				if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+				{
+					if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate)
+						OnScenePlay();
+					else if (m_SceneState == SceneState::Play)
+						OnSceneStop();
+				}
 			}
 		}
 
-		ImGui::SameLine();
-
+		if (hasSimulateButton)
 		{
+			if (hasPlayButton)
+				ImGui::SameLine();
+			
 			Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play) ? m_IconSimiulate : m_IconStop;
-			//ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
-			if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+			if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
 			{
 				if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play)
 					OnSceneSimulate();
 				else if (m_SceneState == SceneState::Simulate)
 					OnSceneStop();
 			}
+			
 		}
+		
+
+		if (hasPauseButton)
+		{
+			bool isPaused = m_ActiveScene->IsPaused();
+			ImGui::SameLine();
+			{
+				Ref<Texture2D> icon = m_IconPause;
+				if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+				{
+					m_ActiveScene->SetPause(!isPaused);
+				}
+			}
+
+			if (isPaused)
+			{
+				ImGui::SameLine();
+				{
+					Ref<Texture2D> icon = m_IconStep;
+					if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0, 0, 0, 0), tintColor) && toolbarEnabled)
+					{
+						m_ActiveScene->Step(1);
+					}
+				}
+			}
+		}
+
 
 		ImGui::PopStyleVar(2);
 		ImGui::PopStyleColor(3);
@@ -698,6 +792,14 @@ namespace Raptor {
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
+	void EditorLayer::OnScenePause()
+	{
+		if (m_SceneState == SceneState::Edit)
+			return;
+
+		m_ActiveScene->SetPause(true);
+	}
+
 	void EditorLayer::OnSceneSimulate()
 	{
 		if (m_SceneState == SceneState::Play)
@@ -709,7 +811,6 @@ namespace Raptor {
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
-
 
 	void EditorLayer::OnDuplicateEntity()
 	{

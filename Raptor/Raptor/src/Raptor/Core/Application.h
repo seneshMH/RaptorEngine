@@ -49,9 +49,12 @@ namespace Raptor {
 
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 
+		void SubmitToMainThread(const std::function<void()>& function);
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
+
+		void ExecuteMainThreadQueue();
 	private:
 
 		ApplicationSpecification m_Specification;
@@ -62,6 +65,8 @@ namespace Raptor {
 		LayerStack m_LayerStack;
 		float m_LastFrameTime;
 
+		std::vector<std::function<void()>> m_MainTheradQueue;
+		std::mutex m_MainTheradQueueMutex;
 	private:
 		static Application* s_Instance;
 	};

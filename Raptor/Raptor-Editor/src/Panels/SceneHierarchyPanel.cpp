@@ -6,11 +6,11 @@
 
 #include "Raptor/Scene/Component.h"
 #include "Raptor/Renderer/Texture.h"
+#include "Raptor/Scripting/ScriptEngine.h"
+#include "Raptor/UI/UI.h"
 
 
 namespace Raptor {
-
-	extern const std::filesystem::path s_AssetPath;
 
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& scene)
 	{
@@ -96,7 +96,7 @@ namespace Raptor {
 		}
 	}
 
-	static void DrawVec3Control(const std::string& label,glm::vec3& value,float resetValue = 0.0f,float columnWidth = 100.0f)
+	static void DrawVec3Control(const std::string& label, glm::vec3& value, float resetValue = 0.0f, float columnWidth = 100.0f)
 	{
 		ImGuiIO io = ImGui::GetIO();
 		auto boldFont = io.Fonts->Fonts[0];
@@ -113,9 +113,9 @@ namespace Raptor {
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 		ImVec2 buttonSize = { lineHeight + 3.0f,lineHeight };
 
-		ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(0.8f,0.1f,0.15f,1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(0.9f,0.2f,0.2f,1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImVec4(0.8f,0.1f,0.15f,1.0f));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.15f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.8f, 0.1f, 0.15f, 1.0f));
 		ImGui::PushFont(boldFont);
 		if (ImGui::Button("x", buttonSize))
 			value.x = resetValue;
@@ -123,7 +123,7 @@ namespace Raptor {
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##x", &value.x, 0.1f,0.0f,0.0f,"%.2f");
+		ImGui::DragFloat("##x", &value.x, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -137,7 +137,7 @@ namespace Raptor {
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##y", &value.y, 0.1f,0.0f, 0.0f, "%.2f");
+		ImGui::DragFloat("##y", &value.y, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -160,8 +160,8 @@ namespace Raptor {
 		ImGui::PopID();
 	}
 
-	template<typename T,typename UIFunction>
-	static void DrawComponent(const std::string& name,Entity entity,UIFunction uiFunftion)
+	template<typename T, typename UIFunction>
+	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunftion)
 	{
 		if (entity.HasComponent<T>())
 		{
@@ -229,6 +229,7 @@ namespace Raptor {
 		if (ImGui::BeginPopup("Add Component"))
 		{
 			DisplayAddComponentEntry<CameraComponent>("Camera");
+			DisplayAddComponentEntry<ScriptComponent>("Script");
 			DisplayAddComponentEntry<SpriteRendererComponent>("Sprite Renderer");
 			DisplayAddComponentEntry<CircleRendererComponent>("Circle Renderer");
 			DisplayAddComponentEntry<Rigidbody2DComponent>("Rigidbody 2D");
@@ -254,7 +255,7 @@ namespace Raptor {
 
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
 			{
-				
+
 				auto& camera = component.Camera;
 
 				ImGui::Checkbox("Primary", &component.Primary);
@@ -268,7 +269,7 @@ namespace Raptor {
 						bool isSelected = currentProjectionTypeString == projectionTypeString[i];
 						if (ImGui::Selectable(projectionTypeString[i], isSelected))
 						{
-							currentProjectionTypeString == projectionTypeString[i];
+							currentProjectionTypeString = projectionTypeString[i];
 							camera.SetProjectionType((SceneCamera::ProjectionType)i);
 						}
 
@@ -325,23 +326,103 @@ namespace Raptor {
 				}
 			});
 
+		DrawComponent<ScriptComponent>("Script", entity, [entity,scene = m_Context](auto& component) mutable
+			{
+				bool scriptClassExits = ScriptEngine::EntityClassExists(component.ClassName);
+
+				static char buffer[64];
+				strcpy_s(buffer,sizeof(buffer), component.ClassName.c_str());
+
+				UI::ScopedStyleColor textColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f), !scriptClassExits);
+
+				if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+				{
+					component.ClassName = buffer;
+					return;
+				}
+
+				//FIELDS
+				bool sceneRunning = scene->IsRunning();
+				if(sceneRunning)
+				{
+					Ref<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+					if (scriptInstance)
+					{
+						const auto& fields = scriptInstance->GetScriptClass()->GetFields();
+						for (const auto& [name, field] : fields)
+						{
+							if (field.Type == ScriptFieldType::Float)
+							{
+								float data = scriptInstance->GetFieldValue<float>(name);
+								if (ImGui::DragFloat(name.c_str(), &data))
+								{
+									scriptInstance->SetFieldValue(name, data);
+								}
+							}
+						}
+
+					}
+				}
+				else
+				{
+					if (scriptClassExits)
+					{
+						Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(component.ClassName);
+						const auto& fields = entityClass->GetFields();
+
+						auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
+
+						for (const auto& [name, field] : fields)
+						{
+							if (entityFields.find(name) != entityFields.end())
+							{
+								ScriptFieldInstance& scriptField = entityFields.at(name);
+
+								if (field.Type == ScriptFieldType::Float)
+								{
+									float data = scriptField.GetValue<float>();
+									if (ImGui::DragFloat(name.c_str(), &data))
+									{
+										scriptField.SetValue(data);
+									}
+								}
+							}
+							else
+							{
+								if (field.Type == ScriptFieldType::Float)
+								{
+									float data = 0.0f;
+									if (ImGui::DragFloat(name.c_str(), &data))
+									{
+										ScriptFieldInstance& fieldInstance = entityFields[name];
+										fieldInstance.Field = field;
+										fieldInstance.SetValue(data);
+									}
+								}
+							}
+						}
+					}
+				}
+
+			});
+
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
 			{
 				ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 
-				ImGui::Button("Texture",ImVec2(100.0f,0.0f));
+				ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
 				if (ImGui::BeginDragDropTarget())
 				{
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 					{
 						const wchar_t* path = (const wchar_t*)payload->Data;
-						std::filesystem::path texturePath = std::filesystem::path(s_AssetPath) / path;
+						std::filesystem::path texturePath(path);
 						component.Texture = Texture2D::Create(texturePath.string());
 					}
 					ImGui::EndDragDropTarget();
 				}
 
-				ImGui::DragFloat("Tiling Factor",&component.TilingFactor,0.1f,0.0f,100.0f);
+				ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.0f);
 			});
 
 		DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [](auto& component)
@@ -351,9 +432,9 @@ namespace Raptor {
 				ImGui::DragFloat("Fade", &component.Fade, 0.00025f, 0.0f, 1.0f);
 			});
 
-			DrawComponent<Rigidbody2DComponent>("Rigidbody 2D", entity, [](auto& component)
+		DrawComponent<Rigidbody2DComponent>("Rigidbody 2D", entity, [](auto& component)
 			{
-				const char* bodyTypeString[] = { "Static", "Dynamic" , "Kinematic"};
+				const char* bodyTypeString[] = { "Static", "Dynamic" , "Kinematic" };
 				const char* currentBodyTypeString = bodyTypeString[(int)component.Type];
 				if (ImGui::BeginCombo("Body Type", currentBodyTypeString))
 				{
@@ -362,7 +443,7 @@ namespace Raptor {
 						bool isSelected = currentBodyTypeString == bodyTypeString[i];
 						if (ImGui::Selectable(bodyTypeString[i], isSelected))
 						{
-							currentBodyTypeString == bodyTypeString[i];
+							currentBodyTypeString = bodyTypeString[i];
 							component.Type = ((Rigidbody2DComponent::BodyType)i);
 						}
 
@@ -373,34 +454,34 @@ namespace Raptor {
 					ImGui::EndCombo();
 				}
 
-				ImGui::Checkbox("Fixed Rotation",&component.FixedRotation);
+				ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
 			});
 
-			DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)
-				{
-					ImGui::DragFloat2("Offset",glm::value_ptr(component.Offset));
-					ImGui::DragFloat2("Size",glm::value_ptr(component.Size));
+		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)
+			{
+				ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
+				ImGui::DragFloat2("Size", glm::value_ptr(component.Size));
 
-					ImGui::DragFloat("Density",&component.Density,0.01f,0.0f,1.0f);
-					ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
-					ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
-					ImGui::DragFloat("RestitutionThreshold", &component.RestitutionThreshold, 0.01f, 0.0f);
+				ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("RestitutionThreshold", &component.RestitutionThreshold, 0.01f, 0.0f);
 
-				});
+			});
 
-			DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](auto& component)
-				{
-					ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
-					ImGui::DragFloat("Radius", &component.Radius);
+		DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](auto& component)
+			{
+				ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
+				ImGui::DragFloat("Radius", &component.Radius);
 
-					ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
-					ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
-					ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
-					ImGui::DragFloat("RestitutionThreshold", &component.RestitutionThreshold, 0.01f, 0.0f);
+				ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("RestitutionThreshold", &component.RestitutionThreshold, 0.01f, 0.0f);
 
-				});
+			});
 
-		
+
 	}
 
 	template<typename T>
@@ -415,7 +496,7 @@ namespace Raptor {
 			}
 		}
 	}
-	
+
 	void SceneHierarchyPanel::SetSelectedEntity(Entity entity)
 	{
 		m_SelectionContext = entity;
