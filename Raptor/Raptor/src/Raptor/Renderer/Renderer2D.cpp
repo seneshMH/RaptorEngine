@@ -4,6 +4,7 @@
 #include "VertexArray.h"
 #include "Shader.h"
 #include "RenderCommand.h"
+#include "UniformBuffer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -82,6 +83,13 @@ namespace Raptor {
 		glm::vec4 QuadVertexPosition[4];
 
 		Renderer2D::Statistics stats;
+
+		struct CameraData
+		{
+			glm::mat4 ViewProjection;
+		};
+		CameraData CameraBuffer;
+		Ref<UniformBuffer> CameraUniformBuffer;
 	};
 
 
@@ -167,9 +175,6 @@ namespace Raptor {
 		}
 
 		s_Data.QuadShader = Shader::Create("assets/shaders/Renderer2DQuad.glsl");
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetIntArray("u_Texture", samplers, s_Data.MaxTextureSlots);
-
 		s_Data.CircleShader = Shader::Create("assets/shaders/Renderer2DCircle.glsl");
 		s_Data.LineShader = Shader::Create("assets/shaders/Renderer2DLine.glsl");
 
@@ -180,6 +185,8 @@ namespace Raptor {
 		s_Data.QuadVertexPosition[1] = { 0.5f, -0.5f,  0.0f,  1.0f };
 		s_Data.QuadVertexPosition[2] = { 0.5f,  0.5f,  0.0f,  1.0f };
 		s_Data.QuadVertexPosition[3] = { -0.5f,  0.5f,  0.0f,  1.0f };
+	
+		s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(Renderer2DData::CameraData), 0);
 	}
 
 	void Renderer2D::Shutdown()
@@ -203,20 +210,13 @@ namespace Raptor {
 		s_Data.TextureSlotIndex = 1;
 	}
 
+	
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		RT_PROFILE_FUNCTION();
 
-		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
-
-		s_Data.CircleShader->Bind();
-		s_Data.CircleShader->SetMat4("u_ViewProjection", viewProj);
-
-		s_Data.LineShader->Bind();
-		s_Data.LineShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.CameraBuffer.ViewProjection = camera.GetProjection() * glm::inverse(transform);
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2DData::CameraData));
 
 		StartBatch();
 	}
@@ -225,14 +225,8 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
-
-		s_Data.CircleShader->Bind();
-		s_Data.CircleShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
-
-		s_Data.LineShader->Bind();
-		s_Data.LineShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjectionMatrix();
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2DData::CameraData));
 
 		StartBatch();
 	}
@@ -241,14 +235,8 @@ namespace Raptor {
 	{
 		RT_PROFILE_FUNCTION();
 
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-
-		s_Data.CircleShader->Bind();
-		s_Data.CircleShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-
-		s_Data.LineShader->Bind();
-		s_Data.LineShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2DData::CameraData));
 
 		StartBatch();
 	}
