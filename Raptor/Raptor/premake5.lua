@@ -73,7 +73,8 @@ project "Raptor"
             "%{Library.winsock}",
             "%{Library.winmm}",
             "%{Library.winversion}",
-            "%{Library.bcrypt}"
+            "%{Library.bcrypt}",
+            "%{Library.dwmapi}",
         }
 
     filter "configurations:Debug"

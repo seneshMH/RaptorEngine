@@ -9,6 +9,11 @@
 
 #include "Platform/OpenGl/OpenGlContext.h"
 
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include <Windows.h>
+#include <dwmapi.h>
+
 namespace Raptor {
 
 	static uint8_t s_GLFWWindowCount = 0;
@@ -61,7 +66,13 @@ namespace Raptor {
 					glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 			#endif
 
+
 			m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
+			auto hwnd = glfwGetWin32Window(m_Window);
+
+			BOOL dark = TRUE;
+			DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
+
 			++s_GLFWWindowCount;
 		}
 
