@@ -14,10 +14,6 @@ IncludeDir["mono"] = "%{wks.location}/Raptor/vendor/mono/include"
 IncludeDir["filewatch"] = "%{wks.location}/Raptor/vendor/filewatch"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
 
---IncludeDir["shaderc"] = "%{wks.location}/Hazel/vendor/shaderc/include"
---IncludeDir["SPIRV_Cross"] = "%{wks.location}/Hazel/vendor/SPIRV-Cross"
-
-
 LibraryDir = {}
 LibraryDir["mono"] = "%{wks.location}/Raptor/vendor/mono/lib/%{cfg.buildcfg}"
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
