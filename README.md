@@ -21,7 +21,7 @@ If the repository was cloned non-recursively previously, use `git submodule upda
 
 <ins>**2. Genarate Solutions:**</ins>
 
-1. Run the [Setup.bat](<https://github.com/seneshMH/RaptorEngine/blob/master/Raptor/scripts/GenerateProjects_(WINDOWS).bat>) file found in `scripts` folder.
+1. Run the [Setup.bat](<https://github.com/seneshMH/RaptorEngine/Raptor/scripts/GenerateProjects_(WINDOWS).bat>) file found in `Raptor/scripts` folder.
 
 ## Editor
 
