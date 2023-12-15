@@ -6,6 +6,20 @@
 
 </div>
 
+## Overview
+
+Raptor Engine is a powerful and flexible 2D game engine designed to streamline the game development process.Currently under active development. With an intuitive editor, seamless 2D physics integration, C# scripting support, and Entity-Component-System (ECS) architecture, it empowers developers to create captivating 2D games with ease.
+
+## Features
+
+-   Editor: A user-friendly editor that provides a visual interface for designing game levels, tweaking parameters, and managing assets.
+
+-   2D Physics Integration: Built-in physics engine for realistic and dynamic 2D interactions, enabling lifelike movements and collisions.
+
+-   C# Scripting Support: Harness the power of C# to create custom gameplay mechanics, behaviors, and extensions effortlessly.
+
+-   Entity-Component-System (ECS): Embrace a modular and scalable architecture for efficient game development and performance optimization.
+
 ## Getting Started
 
 Visual Studio 2022 is recommended
