@@ -1,10 +1,10 @@
 # RaptorEngine
 
-<center>
+<div style="text-align: center;">
 
 ![Raptor](/Resources/logo.png?raw=true "Raptor")
 
-</center>
+</div>
 
 ## Getting Started
 
