@@ -1,6 +1,6 @@
 # RaptorEngine
 
-![Raptor](/Resources/logo.png?raw=true "Raptor")
+![Raptor](/Resources/logo.png?raw=true "Raptor" class="text-center")
 
 ## Getting Started
 
